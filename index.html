@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>釣りマスター - Fishing Master</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  background: linear-gradient(180deg, #87CEEB 0%, #4A90D9 40%, #1a5276 60%, #0d2f4f 100%);
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== ヘッダー ===== */
+#header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(0,0,0,0.3);
+  z-index: 100;
+  backdrop-filter: blur(5px);
+}
+
+#money-display {
+  color: #FFD700;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+#level-display {
+  color: #fff;
+  font-size: 16px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+#shop-btn {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: 2px solid #FFD700;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#shop-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255,215,0,0.5); }
+
+/* ===== キャンバス ===== */
+#game-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+
+/* ===== 釣りUI ===== */
+#cast-btn {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  border: 3px solid #fff;
+  color: #fff;
+  padding: 15px 50px;
+  border-radius: 30px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.3s;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+#cast-btn:hover { transform: translateX(-50%) scale(1.05); }
+#cast-btn:active { transform: translateX(-50%) scale(0.95); }
+#cast-btn.hidden { display: none; }
+
+#status-text {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+  z-index: 50;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ===== リールバトル ===== */
+#battle-ui {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 350px;
+  z-index: 50;
+  display: none;
+  text-align: center;
+}
+
+#fish-name-battle {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+  margin-bottom: 8px;
+}
+
+#tension-bar-container {
+  width: 100%;
+  height: 25px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 15px;
+  border: 2px solid #fff;
+  overflow: hidden;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+#tension-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 13px;
+  transition: width 0.1s, background 0.3s;
+  background: #2ecc71;
+}
+
+#tension-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+#progress-bar-container {
+  width: 100%;
+  height: 20px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 12px;
+  border: 2px solid #87CEEB;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.1s;
+}
+
+#reel-btn {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border: 3px solid #fff;
+  color: #fff;
+  padding: 12px 40px;
+  border-radius: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.1s;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+#reel-btn:active { transform: scale(0.9); background: linear-gradient(135deg, #c0392b, #962d22); }
+
+#battle-hint {
+  color: #fff;
+  font-size: 13px;
+  margin-top: 6px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+/* ===== ショップ ===== */
+#shop-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+#shop-overlay.active { display: flex; }
+
+#shop-panel {
+  background: linear-gradient(180deg, #1a3a5c, #0d2137);
+  border: 3px solid #FFD700;
+  border-radius: 20px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #fff;
+}
+
+#shop-panel h2 {
+  text-align: center;
+  color: #FFD700;
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+#shop-money {
+  text-align: center;
+  color: #FFD700;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.shop-item {
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s;
+}
+.shop-item:hover { border-color: #FFD700; background: rgba(255,215,0,0.08); }
+
+.shop-item-info { flex: 1; }
+.shop-item-name { font-size: 18px; font-weight: bold; color: #fff; }
+.shop-item-desc { font-size: 13px; color: #aaa; margin-top: 3px; }
+.shop-item-level { font-size: 12px; color: #3498db; margin-top: 2px; }
+
+.shop-buy-btn {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.shop-buy-btn:hover { transform: scale(1.05); }
+.shop-buy-btn.cant-afford { background: linear-gradient(135deg, #555, #333); cursor: not-allowed; }
+.shop-buy-btn.maxed { background: linear-gradient(135deg, #3498db, #2980b9); cursor: default; }
+
+#shop-close-btn {
+  display: block;
+  margin: 20px auto 0;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===== 結果ポップアップ ===== */
+#result-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  border: 3px solid #FFD700;
+  border-radius: 20px;
+  padding: 30px 40px;
+  z-index: 150;
+  text-align: center;
+  display: none;
+  backdrop-filter: blur(10px);
+}
+
+#result-popup.active { display: block; }
+
+#result-fish-icon { font-size: 60px; }
+#result-fish-name { color: #FFD700; font-size: 24px; font-weight: bold; margin: 10px 0 5px; }
+#result-fish-size { color: #87CEEB; font-size: 16px; }
+#result-money { color: #2ecc71; font-size: 22px; font-weight: bold; margin: 10px 0; }
+#result-fail { color: #e74c3c; font-size: 22px; font-weight: bold; margin: 10px 0; }
+
+#result-ok-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* ===== 図鑑ボタン ===== */
+#collection-btn {
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#collection-btn:hover { transform: scale(1.1); }
+
+/* ===== 図鑑 ===== */
+#collection-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+#collection-overlay.active { display: flex; }
+
+#collection-panel {
+  background: linear-gradient(180deg, #1a3a5c, #0d2137);
+  border: 3px solid #87CEEB;
+  border-radius: 20px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #fff;
+}
+
+#collection-panel h2 { text-align: center; color: #87CEEB; font-size: 28px; margin-bottom: 15px; }
+
+.collection-entry {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.collection-entry.undiscovered { opacity: 0.4; }
+.collection-icon { font-size: 30px; margin-right: 12px; }
+.collection-info-name { font-weight: bold; font-size: 15px; }
+.collection-info-detail { font-size: 12px; color: #aaa; }
+
+#collection-close-btn {
+  display: block;
+  margin: 20px auto 0;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===== 泡 ===== */
+.bubble {
+  position: absolute;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  animation: bubble-rise linear forwards;
+}
+@keyframes bubble-rise {
+  from { transform: translateY(0) scale(1); opacity: 0.6; }
+  to   { transform: translateY(-200px) scale(0.3); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ヘッダー -->
+  <div id="header">
+    <div>
+      <div id="money-display">💰 0G</div>
+      <div id="level-display">総キャッチ: 0匹</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="collection-btn">📖 図鑑</button>
+      <button id="shop-btn">🛒 ショップ</button>
+    </div>
+  </div>
+
+  <!-- ステータス -->
+  <div id="status-text"></div>
+
+  <!-- キャストボタン -->
+  <button id="cast-btn">🎣 釣りを開始！</button>
+
+  <!-- バトルUI -->
+  <div id="battle-ui">
+    <div id="fish-name-battle"></div>
+    <div id="tension-bar-container">
+      <div id="tension-bar"></div>
+      <div id="tension-label">テンション</div>
+    </div>
+    <div id="progress-bar-container">
+      <div id="progress-bar"></div>
+    </div>
+    <button id="reel-btn">🔄 リール！</button>
+    <div id="battle-hint">連打してリールを巻こう！テンション上げすぎると糸が切れる！</div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result-popup">
+    <div id="result-fish-icon"></div>
+    <div id="result-fish-name"></div>
+    <div id="result-fish-size"></div>
+    <div id="result-money"></div>
+    <div id="result-fail"></div>
+    <button id="result-ok-btn">OK</button>
+  </div>
+
+  <!-- ショップ -->
+  <div id="shop-overlay">
+    <div id="shop-panel">
+      <h2>🛒 ショップ</h2>
+      <div id="shop-money"></div>
+      <div id="shop-items"></div>
+      <button id="shop-close-btn">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 図鑑 -->
+  <div id="collection-overlay">
+    <div id="collection-panel">
+      <h2>📖 おさかな図鑑</h2>
+      <div id="collection-list"></div>
+      <button id="collection-close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========================================
+//  ゲームデータ
+// ========================================
+
+const FISH_DATA = [
+  { id:'iwashi',    name:'イワシ',       icon:'🐟', minSize:10,  maxSize:25,  basePrice:20,   difficulty:1,  rarity:0.30, desc:'どこにでもいる小魚' },
+  { id:'aji',       name:'アジ',         icon:'🐟', minSize:15,  maxSize:35,  basePrice:40,   difficulty:1.5,rarity:0.25, desc:'美味しい大衆魚' },
+  { id:'tai',       name:'タイ',         icon:'🐡', minSize:25,  maxSize:60,  basePrice:100,  difficulty:2.5,rarity:0.15, desc:'めでたい高級魚' },
+  { id:'sake',      name:'サケ',         icon:'🐟', minSize:40,  maxSize:80,  basePrice:150,  difficulty:3,  rarity:0.10, desc:'力強く川を遡る魚' },
+  { id:'maguro',    name:'マグロ',       icon:'🐟', minSize:80,  maxSize:200, basePrice:400,  difficulty:4.5,rarity:0.07, desc:'海の王者、超パワフル' },
+  { id:'same',      name:'サメ',         icon:'🦈', minSize:100, maxSize:300, basePrice:600,  difficulty:6,  rarity:0.05, desc:'恐ろしい捕食者' },
+  { id:'kujira',    name:'クジラ',       icon:'🐋', minSize:500, maxSize:1500,basePrice:2000, difficulty:9,  rarity:0.02, desc:'伝説の巨大生物' },
+  { id:'ryugu',     name:'リュウグウノツカイ', icon:'🐉', minSize:200, maxSize:500, basePrice:3000, difficulty:8, rarity:0.01, desc:'幻の深海魚' },
+];
+
+const SHOP_ITEMS = [
+  {
+    id: 'rod', name: '釣り竿', icon: '🎣',
+    desc: 'リール速度がアップ',
+    maxLevel: 10,
+    baseCost: 100,
+    costMult: 1.8,
+    effect: (lv) => 1 + lv * 0.3,
+    effectDesc: (lv) => `リール速度 x${(1 + lv * 0.3).toFixed(1)}`
+  },
+  {
+    id: 'line', name: '釣り糸', icon: '🧵',
+    desc: 'テンション耐久度がアップ',
+    maxLevel: 10,
+    baseCost: 120,
+    costMult: 1.8,
+    effect: (lv) => 1 + lv * 0.25,
+    effectDesc: (lv) => `耐久度 x${(1 + lv * 0.25).toFixed(2)}`
+  },
+  {
+    id: 'bait', name: 'エサ', icon: '🪱',
+    desc: 'レア魚が出やすくなる',
+    maxLevel: 10,
+    baseCost: 200,
+    costMult: 2.0,
+    effect: (lv) => 1 + lv * 0.15,
+    effectDesc: (lv) => `レア率 x${(1 + lv * 0.15).toFixed(2)}`
+  },
+  {
+    id: 'luck', name: 'お守り', icon: '🍀',
+    desc: '獲得金額がアップ',
+    maxLevel: 10,
+    baseCost: 150,
+    costMult: 2.0,
+    effect: (lv) => 1 + lv * 0.2,
+    effectDesc: (lv) => `金額 x${(1 + lv * 0.2).toFixed(1)}`
+  },
+  {
+    id: 'anchor', name: 'アンカー', icon: '⚓',
+    desc: '魚の抵抗力を軽減',
+    maxLevel: 10,
+    baseCost: 180,
+    costMult: 1.9,
+    effect: (lv) => 1 - lv * 0.06,
+    effectDesc: (lv) => `抵抗力 x${(1 - lv * 0.06).toFixed(2)}`
+  },
+];
+
+// ========================================
+//  ゲーム状態
+// ========================================
+let gameState = {
+  money: 0,
+  totalCatch: 0,
+  upgrades: {},  // { rod: 0, line: 0, bait: 0, luck: 0, anchor: 0 }
+  collection: {},  // { fishId: { caught: true, maxSize: xx, count: 0 } }
+};
+
+// ロード
+function loadGame() {
+  try {
+    const saved = localStorage.getItem('fishingMaster_save');
+    if (saved) {
+      const data = JSON.parse(saved);
+      gameState = { ...gameState, ...data };
+    }
+  } catch(e) {}
+  SHOP_ITEMS.forEach(item => {
+    if (!gameState.upgrades[item.id]) gameState.upgrades[item.id] = 0;
+  });
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem('fishingMaster_save', JSON.stringify(gameState));
+  } catch(e) {}
+}
+
+loadGame();
+
+// ========================================
+//  Canvas & 描画
+// ========================================
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// 水面の高さ
+const getWaterY = () => canvas.height * 0.45;
+
+// 背景の魚アニメーション
+let bgFishes = [];
+for (let i = 0; i < 12; i++) {
+  bgFishes.push({
+    x: Math.random() * canvas.width,
+    y: getWaterY() + 50 + Math.random() * (canvas.height * 0.45),
+    speed: 0.3 + Math.random() * 1.2,
+    size: 8 + Math.random() * 20,
+    dir: Math.random() > 0.5 ? 1 : -1,
+    color: `hsl(${180 + Math.random()*60}, 60%, ${40+Math.random()*20}%)`
+  });
+}
+
+// 波
+let waveOffset = 0;
+
+// 釣り糸の状態
+let lineState = {
+  casting: false,
+  waiting: false,
+  battling: false,
+  hookX: 0,
+  hookY: 0,
+  bobberY: 0,
+  bobberBob: 0,
+};
+
+// パーティクル
+let particles = [];
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: -Math.random() * 5 - 2,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      size: 2 + Math.random() * 4,
+      color
+    });
+  }
+}
+
+function drawScene() {
+  const w = canvas.width;
+  const h = canvas.height;
+  const waterY = getWaterY();
+
+  // 空
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, waterY);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#5DADE2');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, waterY);
+
+  // 太陽
+  ctx.beginPath();
+  ctx.arc(w * 0.8, 60, 40, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFF176';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(w * 0.8, 60, 55, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,241,118,0.2)';
+  ctx.fill();
+
+  // 雲
+  drawCloud(w * 0.15, 50, 0.8);
+  drawCloud(w * 0.5, 80, 0.6);
+  drawCloud(w * 0.75, 35, 0.5);
+
+  // 水中
+  const waterGrad = ctx.createLinearGradient(0, waterY, 0, h);
+  waterGrad.addColorStop(0, 'rgba(26, 82, 118, 0.85)');
+  waterGrad.addColorStop(0.5, 'rgba(13, 47, 79, 0.92)');
+  waterGrad.addColorStop(1, 'rgba(5, 20, 40, 0.98)');
+  ctx.fillStyle = waterGrad;
+  ctx.fillRect(0, waterY, w, h - waterY);
+
+  // 波
+  waveOffset += 0.02;
+  ctx.beginPath();
+  ctx.moveTo(0, waterY);
+  for (let x = 0; x <= w; x += 5) {
+    const y = waterY + Math.sin(x * 0.015 + waveOffset) * 4 + Math.sin(x * 0.008 + waveOffset * 0.7) * 3;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(w, waterY + 15);
+  ctx.lineTo(0, waterY + 15);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(100, 180, 220, 0.4)';
+  ctx.fill();
+
+  // 背景の魚
+  bgFishes.forEach(f => {
+    f.x += f.speed * f.dir;
+    if (f.x > w + 30) f.x = -30;
+    if (f.x < -30) f.x = w + 30;
+
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.scale(f.dir, 1);
+    ctx.fillStyle = f.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, f.size, f.size * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // 尾
+    ctx.beginPath();
+    ctx.moveTo(-f.size, 0);
+    ctx.lineTo(-f.size - f.size * 0.5, -f.size * 0.3);
+    ctx.lineTo(-f.size - f.size * 0.5, f.size * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // 釣り人（陸地/ボート）
+  drawFisher(w * 0.5, waterY);
+
+  // 釣り糸
+  if (lineState.casting || lineState.waiting || lineState.battling) {
+    drawFishingLine(w * 0.5, waterY - 30);
+  }
+
+  // パーティクル
+  particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.life -= p.decay;
+    if (p.life > 0) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  });
+  particles = particles.filter(p => p.life > 0);
+}
+
+function drawCloud(x, y, scale) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 25, 0, Math.PI * 2);
+  ctx.arc(25, -5, 20, 0, Math.PI * 2);
+  ctx.arc(-22, 2, 18, 0, Math.PI * 2);
+  ctx.arc(10, 8, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawFisher(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // ボート
+  ctx.fillStyle = '#8B4513';
+  ctx.beginPath();
+  ctx.moveTo(-40, 0);
+  ctx.quadraticCurveTo(-45, 15, -30, 18);
+  ctx.lineTo(30, 18);
+  ctx.quadraticCurveTo(45, 15, 40, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#5D3A1A';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 体
+  ctx.fillStyle = '#2980b9';
+  ctx.fillRect(-8, -30, 16, 25);
+
+  // 頭
+  ctx.fillStyle = '#F5CBA7';
+  ctx.beginPath();
+  ctx.arc(0, -38, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 帽子
+  ctx.fillStyle = '#E67E22';
+  ctx.fillRect(-12, -50, 24, 8);
+  ctx.fillRect(-8, -55, 16, 8);
+
+  // 竿
+  ctx.strokeStyle = '#5D4E37';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(5, -25);
+  ctx.lineTo(40, -65);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#8B7355';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(40, -65);
+  ctx.lineTo(70, -50);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawFishingLine(fisherX, fisherY) {
+  const tipX = fisherX + 70;
+  const tipY = fisherY - 50;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(lineState.hookX, lineState.hookY);
+  ctx.stroke();
+
+  // ウキ
+  if (lineState.waiting || lineState.battling) {
+    const bobY = lineState.bobberY + Math.sin(lineState.bobberBob) * 3;
+    lineState.bobberBob += 0.05;
+
+    if (lineState.battling) {
+      lineState.bobberBob += 0.15;
+      // 水しぶき
+      if (Math.random() < 0.3) {
+        spawnParticles(lineState.hookX, lineState.bobberY, '#87CEEB', 1);
+      }
+    }
+
+    // ウキ本体
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.ellipse(lineState.hookX, bobY, 6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(lineState.hookX, bobY - 4, 4, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ========================================
+//  ゲームロジック
+// ========================================
+let currentFish = null;
+let battleProgress = 0;
+let battleTension = 0;
+let battleInterval = null;
+let waitTimer = null;
+let isReeling = false;
+
+const $ = id => document.getElementById(id);
+
+function updateUI() {
+  $('money-display').textContent = `💰 ${gameState.money.toLocaleString()}G`;
+  $('level-display').textContent = `総キャッチ: ${gameState.totalCatch}匹`;
+}
+
+function getUpgradeLevel(id) {
+  return gameState.upgrades[id] || 0;
+}
+
+function getUpgradeEffect(id) {
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  return item ? item.effect(getUpgradeLevel(id)) : 1;
+}
+
+function selectFish() {
+  const baitMult = getUpgradeEffect('bait');
+
+  // レアリティを調整
+  let weights = FISH_DATA.map(f => {
+    let w = f.rarity;
+    // エサレベルが高いほどレア魚の確率が上がる
+    if (f.rarity < 0.1) {
+      w *= baitMult;
+    }
+    return w;
+  });
+
+  const total = weights.reduce((a, b) => a + b, 0);
+  let roll = Math.random() * total;
+
+  for (let i = 0; i < FISH_DATA.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) {
+      const fish = { ...FISH_DATA[i] };
+      fish.size = fish.minSize + Math.random() * (fish.maxSize - fish.minSize);
+      fish.size = Math.round(fish.size * 10) / 10;
+      // サイズ比率で価格調整
+      const sizeRatio = fish.size / fish.maxSize;
+      fish.reward = Math.round(fish.basePrice * (0.5 + sizeRatio * 1.5));
+      fish.reward = Math.round(fish.reward * getUpgradeEffect('luck'));
+      // 実際の難易度
+      fish.actualDifficulty = fish.difficulty * (0.7 + sizeRatio * 0.6) * getUpgradeEffect('anchor');
+      return fish;
+    }
+  }
+  return { ...FISH_DATA[0], size: 15, reward: 20, actualDifficulty: 1 };
+}
+
+function castLine() {
+  $('cast-btn').classList.add('hidden');
+  $('status-text').textContent = '🎣 キャスト中...';
+
+  lineState.casting = true;
+  lineState.hookX = canvas.width * 0.5 + 70;
+  lineState.hookY = getWaterY() - 50;
+
+  // キャストアニメーション
+  const targetX = canvas.width * 0.5 + 100 + Math.random() * 80;
+  const targetY = getWaterY() + 20;
+  const duration = 600;
+  const start = Date.now();
+
+  function animateCast() {
+    const t = Math.min((Date.now() - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    lineState.hookX = (canvas.width * 0.5 + 70) + (targetX - (canvas.width * 0.5 + 70)) * ease;
+    lineState.hookY = (getWaterY() - 50) + (targetY - (getWaterY() - 50)) * ease - Math.sin(t * Math.PI) * 80;
+
+    if (t < 1) {
+      requestAnimationFrame(animateCast);
+    } else {
+      lineState.hookX = targetX;
+      lineState.hookY = targetY;
+      lineState.bobberY = targetY;
+      lineState.casting = false;
+      lineState.waiting = true;
+      spawnParticles(targetX, targetY, '#87CEEB', 15);
+      waitForBite();
+    }
+  }
+  animateCast();
+}
+
+function waitForBite() {
+  $('status-text').textContent = '🔔 アタリを待っています...';
+
+  const waitTime = 2000 + Math.random() * 5000;
+  waitTimer = setTimeout(() => {
+    // ヒット！
+    currentFish = selectFish();
+    $('status-text').textContent = `❗ ${currentFish.icon} 何かがかかった！`;
+
+    // ウキを沈める
+    lineState.bobberBob = 0;
+    spawnParticles(lineState.hookX, lineState.bobberY, '#FFD700', 20);
+
+    setTimeout(() => {
+      startBattle();
+    }, 800);
+  }, waitTime);
+}
+
+function startBattle() {
+  lineState.battling = true;
+  lineState.waiting = false;
+  battleProgress = 0;
+  battleTension = 0;
+  isReeling = false;
+
+  $('battle-ui').style.display = 'block';
+  $('cast-btn').classList.add('hidden');
+  $('fish-name-battle').textContent = `${currentFish.icon} ${currentFish.name} (${currentFish.size}cm)`;
+  $('status-text').textContent = '⚔️ ファイト！リールを巻け！';
+
+  updateBattleBars();
+
+  // バトルループ
+  battleInterval = setInterval(() => {
+    // 魚の抵抗：大きい魚ほど強い
+    const resistance = currentFish.actualDifficulty * (0.3 + Math.random() * 0.7);
+    battleProgress -= resistance * 0.4;
+    if (battleProgress < 0) battleProgress = 0;
+
+    // テンション自然減少
+    battleTension -= 1.5;
+    if (battleTension < 0) battleTension = 0;
+
+    // テンションが100超えたら糸切れ
+    if (battleTension >= 100) {
+      endBattle(false, 'linesnap');
+      return;
+    }
+
+    // 進行が100%で釣り上げ成功
+    if (battleProgress >= 100) {
+      endBattle(true);
+      return;
+    }
+
+    updateBattleBars();
+  }, 100);
+}
+
+function reelIn() {
+  if (!lineState.battling) return;
+
+  const rodMult = getUpgradeEffect('rod');
+  const reelPower = 2.5 * rodMult;
+  const tensionAdd = 3 + currentFish.actualDifficulty * 1.2;
+
+  battleProgress += reelPower;
+  battleTension += tensionAdd;
+
+  if (battleProgress > 100) battleProgress = 100;
+  if (battleTension > 100) battleTension = 100;
+
+  // 手応えのバイブレーション
+  if (navigator.vibrate && currentFish.actualDifficulty > 3) {
+    navigator.vibrate(30);
+  }
+
+  spawnParticles(lineState.hookX, lineState.bobberY, '#fff', 2);
+  updateBattleBars();
+}
+
+function updateBattleBars() {
+  const lineStrength = getUpgradeEffect('line');
+  const effectiveTension = battleTension / lineStrength;
+
+  $('tension-bar').style.width = effectiveTension + '%';
+  $('progress-bar').style.width = battleProgress + '%';
+
+  // テンション色
+  if (effectiveTension < 50) {
+    $('tension-bar').style.background = '#2ecc71';
+  } else if (effectiveTension < 75) {
+    $('tension-bar').style.background = '#f39c12';
+  } else {
+    $('tension-bar').style.background = '#e74c3c';
+  }
+
+  // テンションが高い時に画面を揺らす
+  if (effectiveTension > 80) {
+    const shake = (effectiveTension - 80) * 0.15;
+    canvas.style.transform = `translate(${(Math.random()-0.5)*shake}px, ${(Math.random()-0.5)*shake}px)`;
+  } else {
+    canvas.style.transform = '';
+  }
+
+  // 糸切れ判定（補正後）
+  if (effectiveTension >= 100) {
+    endBattle(false, 'linesnap');
+  }
+}
+
+function endBattle(success, reason) {
+  clearInterval(battleInterval);
+  battleInterval = null;
+  lineState.battling = false;
+  lineState.waiting = false;
+  lineState.casting = false;
+  canvas.style.transform = '';
+
+  $('battle-ui').style.display = 'none';
+
+  if (success) {
+    // 成功！
+    gameState.money += currentFish.reward;
+    gameState.totalCatch++;
+
+    // 図鑑更新
+    if (!gameState.collection[currentFish.id]) {
+      gameState.collection[currentFish.id] = { caught: true, maxSize: 0, count: 0 };
+    }
+    const entry = gameState.collection[currentFish.id];
+    entry.count++;
+    if (currentFish.size > entry.maxSize) entry.maxSize = currentFish.size;
+
+    saveGame();
+
+    $('result-fish-icon').textContent = currentFish.icon;
+    $('result-fish-name').textContent = currentFish.name;
+    $('result-fish-size').textContent = `${currentFish.size}cm`;
+    $('result-money').textContent = `+${currentFish.reward.toLocaleString()}G 獲得！`;
+    $('result-money').style.display = 'block';
+    $('result-fail').style.display = 'none';
+
+    spawnParticles(canvas.width / 2, canvas.height / 2, '#FFD700', 40);
+    spawnParticles(canvas.width / 2, canvas.height / 2, '#2ecc71', 20);
+  } else {
+    $('result-fish-icon').textContent = '💨';
+    $('result-fish-name').textContent = `${currentFish.name}に逃げられた...`;
+    $('result-fish-size').textContent = reason === 'linesnap' ? '糸が切れた！' : '逃げられた！';
+    $('result-money').style.display = 'none';
+    $('result-fail').textContent = 'もっと強い装備が必要かも...';
+    $('result-fail').style.display = 'block';
+  }
+
+  $('result-popup').classList.add('active');
+  updateUI();
+}
+
+function closeResult() {
+  $('result-popup').classList.remove('active');
+  $('cast-btn').classList.remove('hidden');
+  $('status-text').textContent = '';
+  currentFish = null;
+}
+
+// ========================================
+//  ショップ
+// ========================================
+function openShop() {
+  $('shop-overlay').classList.add('active');
+  renderShop();
+}
+
+function closeShop() {
+  $('shop-overlay').classList.remove('active');
+}
+
+function renderShop() {
+  $('shop-money').textContent = `所持金: ${gameState.money.toLocaleString()}G`;
+
+  const container = $('shop-items');
+  container.innerHTML = '';
+
+  SHOP_ITEMS.forEach(item => {
+    const lv = getUpgradeLevel(item.id);
+    const maxed = lv >= item.maxLevel;
+    const cost = maxed ? 0 : Math.round(item.baseCost * Math.pow(item.costMult, lv));
+    const canAfford = gameState.money >= cost;
+
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="shop-item-info">
+        <div class="shop-item-name">${item.icon} ${item.name}</div>
+        <div class="shop-item-desc">${item.desc}</div>
+        <div class="shop-item-level">Lv.${lv}/${item.maxLevel} → ${item.effectDesc(lv)}</div>
+      </div>
+      <button class="shop-buy-btn ${maxed ? 'maxed' : (!canAfford ? 'cant-afford' : '')}"
+              ${maxed || !canAfford ? '' : `onclick="buyItem('${item.id}')"` }>
+        ${maxed ? 'MAX' : `${cost.toLocaleString()}G`}
+      </button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function buyItem(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  const lv = getUpgradeLevel(itemId);
+  if (lv >= item.maxLevel) return;
+
+  const cost = Math.round(item.baseCost * Math.pow(item.costMult, lv));
+  if (gameState.money < cost) return;
+
+  gameState.money -= cost;
+  gameState.upgrades[itemId] = lv + 1;
+  saveGame();
+  updateUI();
+  renderShop();
+}
+
+// ========================================
+//  図鑑
+// ========================================
+function openCollection() {
+  $('collection-overlay').classList.add('active');
+  renderCollection();
+}
+
+function closeCollection() {
+  $('collection-overlay').classList.remove('active');
+}
+
+function renderCollection() {
+  const container = $('collection-list');
+  container.innerHTML = '';
+
+  FISH_DATA.forEach(fish => {
+    const entry = gameState.collection[fish.id];
+    const discovered = entry && entry.caught;
+    const div = document.createElement('div');
+    div.className = `collection-entry ${discovered ? '' : 'undiscovered'}`;
+    div.innerHTML = `
+      <div class="collection-icon">${discovered ? fish.icon : '❓'}</div>
+      <div>
+        <div class="collection-info-name">${discovered ? fish.name : '？？？'}</div>
+        <div class="collection-info-detail">
+          ${discovered
+            ? `${fish.desc}<br>最大: ${entry.maxSize}cm / 釣った数: ${entry.count}匹`
+            : 'まだ釣ったことがない'
+          }
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ========================================
+//  イベント
+// ========================================
+$('cast-btn').addEventListener('click', castLine);
+$('reel-btn').addEventListener('mousedown', () => { isReeling = true; });
+$('reel-btn').addEventListener('mouseup', () => { isReeling = false; });
+$('reel-btn').addEventListener('mouseleave', () => { isReeling = false; });
+$('reel-btn').addEventListener('touchstart', (e) => { e.preventDefault(); isReeling = true; });
+$('reel-btn').addEventListener('touchend', () => { isReeling = false; });
+
+// 連打でもOK
+$('reel-btn').addEventListener('click', reelIn);
+
+// キーボード対応
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && lineState.battling) {
+    e.preventDefault();
+    reelIn();
+  }
+  if (e.code === 'Space' && !lineState.battling && !lineState.waiting && !lineState.casting
+      && !$('result-popup').classList.contains('active')
+      && !$('shop-overlay').classList.contains('active')) {
+    castLine();
+  }
+  if (e.code === 'Enter' && $('result-popup').classList.contains('active')) {
+    closeResult();
+  }
+});
+
+// 長押しリール
+setInterval(() => {
+  if (isReeling && lineState.battling) {
+    reelIn();
+  }
+}, 120);
+
+$('result-ok-btn').addEventListener('click', closeResult);
+$('shop-btn').addEventListener('click', openShop);
+$('shop-close-btn').addEventListener('click', closeShop);
+$('collection-btn').addEventListener('click', openCollection);
+$('collection-close-btn').addEventListener('click', closeCollection);
+
+// ========================================
+//  メインループ
+// ========================================
+function gameLoop() {
+  drawScene();
+  requestAnimationFrame(gameLoop);
+}
+
+updateUI();
+gameLoop();
+</script>
+</body>
+</html>
