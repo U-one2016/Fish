@@ -116,16 +116,21 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--ocean-deep);color:#f
 /* ===== Battle HUD ===== */
 #battle-hud{position:absolute;top:0;left:0;right:0;display:none;justify-content:space-between;align-items:flex-start;padding:8px;z-index:100;pointer-events:none;gap:6px}
 #battle-hud>*{pointer-events:auto}
-.battle-card{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;flex:1;max-width:180px}
-.battle-card-label{font-size:.7rem;opacity:.5;margin-bottom:2px}
-.battle-card-score{font-family:'Permanent Marker',cursive;font-size:.95rem;color:var(--gold)}
-.battle-card-activity{font-size:.75rem;margin-top:3px;min-height:1.1em;opacity:.85}
-.battle-card-fish-info{font-size:.7rem;margin-top:2px}
-.battle-card-progress{margin-top:3px;display:flex;align-items:center;gap:4px}
-.bc-progress-bar{flex:1;height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
-.bc-progress-fill{height:100%;border-radius:3px;transition:width .3s,background .3s;width:0%}
-.bc-progress-pct{font-size:.6rem;min-width:26px;text-align:right;opacity:.7}
-.battle-timer-center{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:6px 14px;font-family:'Permanent Marker',cursive;font-size:2.2rem;min-width:65px;text-align:center;transition:color .3s;flex-shrink:0}
+.battle-card{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 14px;flex:1}
+#battle-card-me{border-left:3px solid #44aaff;text-align:left}
+#battle-card-op{border-right:3px solid #ff6644;text-align:right}
+.battle-card-label{font-size:.75rem;opacity:.6;margin-bottom:4px;font-weight:700}
+.battle-card-score{font-family:'Permanent Marker',cursive;font-size:1.1rem;color:var(--gold)}
+.battle-card-activity{font-size:.8rem;margin-top:4px;min-height:1.2em;opacity:.85}
+.battle-card-fish-info{font-size:.75rem;margin-top:3px}
+.battle-card-progress{margin-top:4px;display:flex;align-items:center;gap:5px}
+#battle-card-op .battle-card-progress{flex-direction:row-reverse}
+.bc-progress-bar{flex:1;height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden}
+.bc-progress-fill{height:100%;border-radius:4px;transition:width .3s,background .3s;width:0%}
+.bc-progress-pct{font-size:.65rem;min-width:30px;opacity:.7}
+#battle-card-me .bc-progress-pct{text-align:left}
+#battle-card-op .bc-progress-pct{text-align:right}
+.battle-timer-center{background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.25);border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-family:'Permanent Marker',cursive;font-size:1.8rem;transition:color .3s;flex-shrink:0}
 .battle-timer-center.timer-low{color:var(--danger);animation:timerPulse .5s ease-in-out infinite alternate}
 @keyframes timerPulse{0%{transform:scale(1)}100%{transform:scale(1.15)}}
 #opponent-ghost-fish{position:absolute;z-index:8;pointer-events:none;display:none;opacity:.3;font-size:2rem;transition:left .8s ease,top .8s ease}
