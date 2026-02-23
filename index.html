@@ -114,16 +114,25 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--ocean-deep);color:#f
 #invite-btn:hover{background:rgba(255,255,255,.2)}
 
 /* ===== Battle HUD ===== */
-#battle-hud{position:absolute;top:0;left:0;right:0;display:none;justify-content:space-between;align-items:flex-start;padding:12px;z-index:100;pointer-events:none}
+#battle-hud{position:absolute;top:0;left:0;right:0;display:none;justify-content:space-between;align-items:flex-start;padding:8px;z-index:100;pointer-events:none;gap:6px}
 #battle-hud>*{pointer-events:auto}
-.battle-panel{background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 16px;text-align:center}
-.battle-center{font-family:'Permanent Marker',cursive;font-size:2.5rem;min-width:80px;border-color:rgba(255,255,255,.2);transition:color .3s}
-.battle-center.timer-low{color:var(--danger);animation:timerPulse .5s ease-in-out infinite alternate}
+.battle-card{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;flex:1;max-width:180px}
+.battle-card-label{font-size:.7rem;opacity:.5;margin-bottom:2px}
+.battle-card-score{font-family:'Permanent Marker',cursive;font-size:.95rem;color:var(--gold)}
+.battle-card-activity{font-size:.75rem;margin-top:3px;min-height:1.1em;opacity:.85}
+.battle-card-fish-info{font-size:.7rem;margin-top:2px}
+.battle-card-progress{margin-top:3px;display:flex;align-items:center;gap:4px}
+.bc-progress-bar{flex:1;height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
+.bc-progress-fill{height:100%;border-radius:3px;transition:width .3s,background .3s;width:0%}
+.bc-progress-pct{font-size:.6rem;min-width:26px;text-align:right;opacity:.7}
+.battle-timer-center{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:6px 14px;font-family:'Permanent Marker',cursive;font-size:2.2rem;min-width:65px;text-align:center;transition:color .3s;flex-shrink:0}
+.battle-timer-center.timer-low{color:var(--danger);animation:timerPulse .5s ease-in-out infinite alternate}
 @keyframes timerPulse{0%{transform:scale(1)}100%{transform:scale(1.15)}}
-.battle-label{font-size:.75rem;opacity:.6;margin-bottom:4px}
-.battle-gold{font-family:'Permanent Marker',cursive;font-size:1.3rem;color:var(--gold)}
-.battle-catches{font-size:.85rem;opacity:.8}
-.battle-status{font-size:.75rem;opacity:.5;margin-top:2px}
+#opponent-ghost-fish{position:absolute;z-index:8;pointer-events:none;display:none;opacity:.3;font-size:2rem;transition:left .8s ease,top .8s ease}
+#opponent-ghost-fish.ghost-catch{animation:ghostCatch .6s ease-out forwards}
+#opponent-ghost-fish.ghost-escape{animation:ghostEscape .6s ease-out forwards}
+@keyframes ghostCatch{0%{opacity:.3;transform:translateY(0)}100%{opacity:0;transform:translateY(-80px)}}
+@keyframes ghostEscape{0%{opacity:.3;transform:translateX(0)}100%{opacity:0;transform:translateX(120px)}}
 
 /* ===== Result Screen ===== */
 #result-screen{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);backdrop-filter:blur(15px);z-index:500;display:none;align-items:center;justify-content:center}
@@ -188,19 +197,23 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--ocean-deep);color:#f
 
   <!-- Battle HUD -->
   <div id="battle-hud">
-    <div id="battle-my-score" class="battle-panel">
-      <div class="battle-label">あなた</div>
-      <div class="battle-gold">0G</div>
-      <div class="battle-catches">0匹</div>
+    <div id="battle-card-me" class="battle-card">
+      <div class="battle-card-label">あなた</div>
+      <div class="battle-card-score">💰 <span class="bc-gold">0</span>G  <span class="bc-catches">0</span>匹</div>
+      <div class="battle-card-activity">待機中</div>
+      <div class="battle-card-fish-info" style="display:none"><span class="bc-fish-emoji"></span> <span class="bc-fish-name"></span> <span class="bc-fish-size"></span>cm</div>
+      <div class="battle-card-progress" style="display:none"><div class="bc-progress-bar"><div class="bc-progress-fill"></div></div><span class="bc-progress-pct">0%</span></div>
     </div>
-    <div id="battle-timer" class="battle-panel battle-center">60</div>
-    <div id="battle-opponent" class="battle-panel">
-      <div class="battle-label">相手</div>
-      <div class="battle-gold">0G</div>
-      <div class="battle-catches">0匹</div>
-      <div class="battle-status">待機中</div>
+    <div id="battle-timer" class="battle-timer-center">60</div>
+    <div id="battle-card-op" class="battle-card">
+      <div class="battle-card-label">相手</div>
+      <div class="battle-card-score">💰 <span class="bc-gold">0</span>G  <span class="bc-catches">0</span>匹</div>
+      <div class="battle-card-activity">待機中</div>
+      <div class="battle-card-fish-info" style="display:none"><span class="bc-fish-emoji"></span> <span class="bc-fish-name"></span> <span class="bc-fish-size"></span>cm</div>
+      <div class="battle-card-progress" style="display:none"><div class="bc-progress-bar"><div class="bc-progress-fill"></div></div><span class="bc-progress-pct">0%</span></div>
     </div>
   </div>
+  <div id="opponent-ghost-fish"></div>
 
   <!-- Result Screen -->
   <div id="result-screen">
@@ -245,6 +258,8 @@ var peer=null,conn=null,isHost=false;
 var battleTimer=null,battleTimeLeft=60;
 var battleScore=0,battleCatches=0;
 var opponentScore=0,opponentCatches=0,opponentStatus='';
+var opponentFightInfo=null,opponentFightProgress=0,opponentFightActive=false;
+var myActivityStatus='待機中',myFightInfo=null,myFightProgress=0;
 var ROOM_PREFIX='tairyou-fishing-';
 var BATTLE_DURATION=60;
 
@@ -322,7 +337,7 @@ function getHookPos(){var r=document.getElementById('fishing-line').getBoundingC
 
 function startCasting(){
   gameState='casting';totalCasts++;updateHUD();document.getElementById('cast-btn').style.display='none';
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:'キャスト中...'});
+  if(isBattle){myActivityStatus='キャスト中...';myFightInfo=null;myFightProgress=0;updateBattleHUD();if(conn&&conn.open)conn.send({type:'status',statusText:'キャスト中...'})}
   var fl=document.getElementById('fishing-line');fl.style.display='block';fl.style.height='0px';fl.style.animation='none';lineMode='none';
   setTimeout(function(){fl.style.height='38%';gameState='waiting';document.getElementById('waiting-text').style.display='block';lineMode='waiting';
     setTimeout(function(){var hp=getHookPos();fishScreenX=hp.x;fishScreenY=hp.y;var r=document.createElement('div');r.className='ripple';r.style.left=hp.x+'px';r.style.top=hp.y+'px';document.getElementById('game-container').appendChild(r);setTimeout(function(){r.remove()},3000)},600);
@@ -341,7 +356,7 @@ function startApproach(){
 
 function triggerBite(){
   gameState='bite';document.getElementById('approaching-fish').style.display='none';document.getElementById('waiting-text').style.display='none';
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:currentFish.name+' がHIT!'});
+  if(isBattle){myActivityStatus=currentFish.name+' がHIT!';myFightInfo={emoji:currentFish.emoji,name:currentFish.name,tier:currentFish.tier,size:currentSize};updateBattleHUD();if(conn&&conn.open)conn.send({type:'status',statusText:currentFish.name+' がHIT!'})}
   var hp=getHookPos(),scale=getFishScale(currentFish,currentSize),bs=document.getElementById('bite-scene');
   bs.querySelector('.bite-fish').textContent=currentFish.emoji;bs.querySelector('.bite-fish').style.fontSize=scale+'rem';
   bs.querySelector('.bite-label').textContent=currentFish.name+'が食いついた！';bs.querySelector('.bite-size').textContent='推定 '+currentSize+'cm';
@@ -378,9 +393,10 @@ function startFight(){
     ff.style.left=fx+'px';ff.style.top=fy+'px';
     ff.style.transform='scale('+Math.max(.4,1-dr*.5)+')';
     fishScreenX=fx;fishScreenY=fy;
+    if(isBattle&&tick%10===0){myFightProgress=Math.max(0,Math.min(1,1-fishDistance/maxDistance));updateBattleHUD();if(conn&&conn.open)conn.send({type:'fight-update',progress:myFightProgress})}
     if(fishDistance>=maxDistance)fishEscaped();updateDistanceUI();
   },50);
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:'格闘中!'});
+  if(isBattle){myActivityStatus='格闘中';myFightInfo={emoji:currentFish.emoji,name:currentFish.name,tier:currentFish.tier,size:currentSize};myFightProgress=Math.max(0,Math.min(1,1-fishDistance/maxDistance));updateBattleHUD();if(conn&&conn.open)conn.send({type:'fight-start',emoji:currentFish.emoji,name:currentFish.name,tier:currentFish.tier,size:currentSize})}
 }
 
 // キャンバス描画ループ：竿先→魚をつなぐ糸
@@ -503,6 +519,7 @@ function showCatchPopup(){
     // Battle mode: track battle score, don't add to money
     battleScore+=reward;
     battleCatches++;
+    myActivityStatus='釣り上げた!';myFightInfo=null;myFightProgress=0;
     updateBattleHUD();
     if(conn&&conn.open)conn.send({type:'catch',species:currentFish.emoji+' '+currentFish.name,size:currentSize,reward:reward,totalScore:battleScore,totalCatches:battleCatches});
   }else{
@@ -536,7 +553,7 @@ function fishEscaped(){
   // Hide OK button in battle (auto-close)
   document.getElementById('escaped-ok-btn').style.display=isBattle?'none':'';
   resetCastBtn();
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:'待機中'});
+  if(isBattle){myActivityStatus='逃げられた...';myFightInfo=null;myFightProgress=0;updateBattleHUD();if(conn&&conn.open){conn.send({type:'escape',emoji:currentFish?currentFish.emoji:'',name:currentFish?currentFish.name:''});conn.send({type:'status',statusText:'待機中'})}}
   // Auto-close in battle mode
   if(isBattle){setTimeout(function(){closeEscapedPopup()},1500)}
 }
@@ -545,13 +562,13 @@ function closeCatchPopup(){
   document.getElementById('catch-popup').classList.remove('show');
   document.getElementById('catch-ok-btn').style.display='';
   resetCastBtn();
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:'待機中'});
+  if(isBattle){myActivityStatus='待機中';myFightInfo=null;myFightProgress=0;updateBattleHUD();if(conn&&conn.open)conn.send({type:'status',statusText:'待機中'})}
 }
 function closeEscapedPopup(){
   document.getElementById('escaped-popup').classList.remove('show');
   document.getElementById('escaped-ok-btn').style.display='';
   resetCastBtn();
-  if(isBattle&&conn&&conn.open)conn.send({type:'status',statusText:'待機中'});
+  if(isBattle){myActivityStatus='待機中';updateBattleHUD();if(conn&&conn.open)conn.send({type:'status',statusText:'待機中'})}
 }
 function resetCastBtn(){document.getElementById('cast-btn').style.display='flex'}
 
@@ -647,8 +664,12 @@ function startBattle(){
   opponentScore=0;
   opponentCatches=0;
   opponentStatus='待機中';
+  opponentFightInfo=null;opponentFightProgress=0;opponentFightActive=false;
+  myActivityStatus='待機中';myFightInfo=null;myFightProgress=0;
   battleTimeLeft=BATTLE_DURATION;
   gameState='idle';
+  // Reset ghost fish
+  var gf=document.getElementById('opponent-ghost-fish');gf.style.display='none';gf.className='';
   // Show battle HUD
   document.getElementById('battle-hud').style.display='flex';
   updateBattleHUD();
@@ -759,12 +780,35 @@ function handlePeerMessage(msg){
     case 'catch':
       opponentScore=msg.totalScore;
       opponentCatches=msg.totalCatches;
+      opponentFightActive=false;opponentFightInfo=null;opponentFightProgress=0;
+      opponentStatus='釣り上げた!';
       updateBattleHUD();
+      hideGhostFish('catch');
       showOpponentToast(msg.species+' '+msg.size+'cm (+'+msg.reward+'G)');
       break;
     case 'status':
       opponentStatus=msg.statusText;
+      if(msg.statusText==='待機中'){opponentFightActive=false;opponentFightInfo=null;opponentFightProgress=0}
       updateBattleHUD();
+      break;
+    case 'fight-start':
+      opponentFightActive=true;
+      opponentFightInfo={emoji:msg.emoji,name:msg.name,tier:msg.tier,size:msg.size};
+      opponentFightProgress=0;
+      opponentStatus='格闘中';
+      updateBattleHUD();
+      showGhostFish(msg.emoji);
+      break;
+    case 'fight-update':
+      opponentFightProgress=msg.progress;
+      if(opponentFightActive)updateGhostFishPosition(msg.progress);
+      updateBattleHUD();
+      break;
+    case 'escape':
+      opponentFightActive=false;opponentFightInfo=null;opponentFightProgress=0;
+      opponentStatus='逃げられた...';
+      updateBattleHUD();
+      hideGhostFish('escape');
       break;
     case 'timer':
       battleTimeLeft=msg.timeLeft;
@@ -791,15 +835,52 @@ function handlePeerMessage(msg){
 function updateBattleHUD(){
   var hud=document.getElementById('battle-hud');
   if(!hud||hud.style.display==='none')return;
-  hud.querySelector('#battle-my-score .battle-gold').textContent=battleScore.toLocaleString()+'G';
-  hud.querySelector('#battle-my-score .battle-catches').textContent=battleCatches+'匹';
   var timerEl=document.getElementById('battle-timer');
   timerEl.textContent=battleTimeLeft;
-  if(battleTimeLeft<=10){timerEl.classList.add('timer-low')}
-  else{timerEl.classList.remove('timer-low')}
-  hud.querySelector('#battle-opponent .battle-gold').textContent=opponentScore.toLocaleString()+'G';
-  hud.querySelector('#battle-opponent .battle-catches').textContent=opponentCatches+'匹';
-  hud.querySelector('#battle-opponent .battle-status').textContent=opponentStatus;
+  if(battleTimeLeft<=10)timerEl.classList.add('timer-low');
+  else timerEl.classList.remove('timer-low');
+  updateBattleCard('battle-card-me',battleScore,battleCatches,myActivityStatus,myFightInfo,myFightProgress);
+  updateBattleCard('battle-card-op',opponentScore,opponentCatches,opponentFightActive?'格闘中':opponentStatus,opponentFightActive?opponentFightInfo:null,opponentFightProgress);
+}
+function updateBattleCard(cardId,score,catches,activity,fightInfo,progress){
+  var card=document.getElementById(cardId);if(!card)return;
+  card.querySelector('.bc-gold').textContent=score.toLocaleString();
+  card.querySelector('.bc-catches').textContent=catches;
+  card.querySelector('.battle-card-activity').textContent=activity;
+  var fi=card.querySelector('.battle-card-fish-info'),pr=card.querySelector('.battle-card-progress');
+  if(fightInfo&&activity==='格闘中'){
+    fi.style.display='block';
+    fi.querySelector('.bc-fish-emoji').textContent=fightInfo.emoji;
+    fi.querySelector('.bc-fish-name').textContent=fightInfo.name;
+    fi.querySelector('.bc-fish-size').textContent=fightInfo.size;
+    pr.style.display='flex';
+    var pct=Math.round(progress*100);
+    pr.querySelector('.bc-progress-pct').textContent=pct+'%';
+    var fill=pr.querySelector('.bc-progress-fill');
+    fill.style.width=pct+'%';
+    if(pct>70)fill.style.background='var(--success)';
+    else if(pct>40)fill.style.background='var(--gold)';
+    else fill.style.background='var(--danger)';
+  }else{fi.style.display='none';pr.style.display='none'}
+}
+function showGhostFish(emoji){
+  var gf=document.getElementById('opponent-ghost-fish');
+  gf.textContent=emoji;gf.style.display='block';gf.className='';gf.style.opacity='.3';
+  updateGhostFishPosition(0);
+}
+function updateGhostFishPosition(progress){
+  var gf=document.getElementById('opponent-ghost-fish');
+  if(gf.style.display==='none')return;
+  var waterTop=window.innerHeight*0.30;
+  var x=window.innerWidth*0.82-progress*window.innerWidth*0.22;
+  var y=waterTop+50+(1-progress)*window.innerHeight*0.12;
+  gf.style.left=x+'px';gf.style.top=y+'px';
+}
+function hideGhostFish(reason){
+  var gf=document.getElementById('opponent-ghost-fish');
+  if(gf.style.display==='none')return;
+  gf.className=reason==='catch'?'ghost-catch':'ghost-escape';
+  setTimeout(function(){gf.style.display='none';gf.className=''},700);
 }
 
 function startBattleTimer(){
@@ -833,6 +914,9 @@ function endBattle(disconnected){
   // Cancel any ongoing fishing
   gameState='idle';
   lineMode='none';
+  myActivityStatus='待機中';myFightInfo=null;myFightProgress=0;
+  opponentFightInfo=null;opponentFightProgress=0;opponentFightActive=false;
+  var gf=document.getElementById('opponent-ghost-fish');gf.style.display='none';gf.className='';
   ['fight-ui','fishing-line','approaching-fish','bite-scene','waiting-text','fighting-fish','catch-anim-fish'].forEach(function(id){
     var e=document.getElementById(id);
     e.style.display='none';
