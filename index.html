@@ -3,1227 +3,422 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>釣りマスター - Fishing Master</title>
+<title>🎣 大漁フィッシング</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
-  background: linear-gradient(180deg, #87CEEB 0%, #4A90D9 40%, #1a5276 60%, #0d2f4f 100%);
-  min-height: 100vh;
-  overflow: hidden;
-  user-select: none;
-}
-
-#game-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ===== ヘッダー ===== */
-#header {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background: rgba(0,0,0,0.3);
-  z-index: 100;
-  backdrop-filter: blur(5px);
-}
-
-#money-display {
-  color: #FFD700;
-  font-size: 24px;
-  font-weight: bold;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-}
-
-#level-display {
-  color: #fff;
-  font-size: 16px;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-}
-
-#shop-btn {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
-  border: 2px solid #FFD700;
-  color: #fff;
-  padding: 8px 20px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-#shop-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255,215,0,0.5); }
-
-/* ===== キャンバス ===== */
-#game-canvas {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-}
-
-/* ===== 釣りUI ===== */
-#cast-btn {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  border: 3px solid #fff;
-  color: #fff;
-  padding: 15px 50px;
-  border-radius: 30px;
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 50;
-  transition: all 0.3s;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-}
-#cast-btn:hover { transform: translateX(-50%) scale(1.05); }
-#cast-btn:active { transform: translateX(-50%) scale(0.95); }
-#cast-btn.hidden { display: none; }
-
-#status-text {
-  position: absolute;
-  bottom: 140px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-  z-index: 50;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* ===== リールバトル ===== */
-#battle-ui {
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 350px;
-  z-index: 50;
-  display: none;
-  text-align: center;
-}
-
-#fish-name-battle {
-  color: #FFD700;
-  font-size: 20px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-  margin-bottom: 8px;
-}
-
-#tension-bar-container {
-  width: 100%;
-  height: 25px;
-  background: rgba(0,0,0,0.5);
-  border-radius: 15px;
-  border: 2px solid #fff;
-  overflow: hidden;
-  margin-bottom: 8px;
-  position: relative;
-}
-
-#tension-bar {
-  height: 100%;
-  width: 0%;
-  border-radius: 13px;
-  transition: width 0.1s, background 0.3s;
-  background: #2ecc71;
-}
-
-#tension-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-}
-
-#progress-bar-container {
-  width: 100%;
-  height: 20px;
-  background: rgba(0,0,0,0.5);
-  border-radius: 12px;
-  border: 2px solid #87CEEB;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-#progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
-  border-radius: 10px;
-  transition: width 0.1s;
-}
-
-#reel-btn {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  border: 3px solid #fff;
-  color: #fff;
-  padding: 12px 40px;
-  border-radius: 25px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.1s;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-#reel-btn:active { transform: scale(0.9); background: linear-gradient(135deg, #c0392b, #962d22); }
-
-#battle-hint {
-  color: #fff;
-  font-size: 13px;
-  margin-top: 6px;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-}
-
-/* ===== ショップ ===== */
-#shop-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 200;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(5px);
-}
-#shop-overlay.active { display: flex; }
-
-#shop-panel {
-  background: linear-gradient(180deg, #1a3a5c, #0d2137);
-  border: 3px solid #FFD700;
-  border-radius: 20px;
-  padding: 30px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  color: #fff;
-}
-
-#shop-panel h2 {
-  text-align: center;
-  color: #FFD700;
-  font-size: 28px;
-  margin-bottom: 5px;
-}
-
-#shop-money {
-  text-align: center;
-  color: #FFD700;
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-.shop-item {
-  background: rgba(255,255,255,0.08);
-  border: 2px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.3s;
-}
-.shop-item:hover { border-color: #FFD700; background: rgba(255,215,0,0.08); }
-
-.shop-item-info { flex: 1; }
-.shop-item-name { font-size: 18px; font-weight: bold; color: #fff; }
-.shop-item-desc { font-size: 13px; color: #aaa; margin-top: 3px; }
-.shop-item-level { font-size: 12px; color: #3498db; margin-top: 2px; }
-
-.shop-buy-btn {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  border: 2px solid #fff;
-  color: #fff;
-  padding: 8px 18px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-  white-space: nowrap;
-}
-.shop-buy-btn:hover { transform: scale(1.05); }
-.shop-buy-btn.cant-afford { background: linear-gradient(135deg, #555, #333); cursor: not-allowed; }
-.shop-buy-btn.maxed { background: linear-gradient(135deg, #3498db, #2980b9); cursor: default; }
-
-#shop-close-btn {
-  display: block;
-  margin: 20px auto 0;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  border: 2px solid #fff;
-  color: #fff;
-  padding: 10px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* ===== 結果ポップアップ ===== */
-#result-popup {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.85);
-  border: 3px solid #FFD700;
-  border-radius: 20px;
-  padding: 30px 40px;
-  z-index: 150;
-  text-align: center;
-  display: none;
-  backdrop-filter: blur(10px);
-}
-
-#result-popup.active { display: block; }
-
-#result-fish-icon { font-size: 60px; }
-#result-fish-name { color: #FFD700; font-size: 24px; font-weight: bold; margin: 10px 0 5px; }
-#result-fish-size { color: #87CEEB; font-size: 16px; }
-#result-money { color: #2ecc71; font-size: 22px; font-weight: bold; margin: 10px 0; }
-#result-fail { color: #e74c3c; font-size: 22px; font-weight: bold; margin: 10px 0; }
-
-#result-ok-btn {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  border: 2px solid #fff;
-  color: #fff;
-  padding: 10px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-/* ===== 図鑑ボタン ===== */
-#collection-btn {
-  background: linear-gradient(135deg, #8e44ad, #9b59b6);
-  border: 2px solid #fff;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 25px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-#collection-btn:hover { transform: scale(1.1); }
-
-/* ===== 図鑑 ===== */
-#collection-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 200;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(5px);
-}
-#collection-overlay.active { display: flex; }
-
-#collection-panel {
-  background: linear-gradient(180deg, #1a3a5c, #0d2137);
-  border: 3px solid #87CEEB;
-  border-radius: 20px;
-  padding: 30px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  color: #fff;
-}
-
-#collection-panel h2 { text-align: center; color: #87CEEB; font-size: 28px; margin-bottom: 15px; }
-
-.collection-entry {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-.collection-entry.undiscovered { opacity: 0.4; }
-.collection-icon { font-size: 30px; margin-right: 12px; }
-.collection-info-name { font-weight: bold; font-size: 15px; }
-.collection-info-detail { font-size: 12px; color: #aaa; }
-
-#collection-close-btn {
-  display: block;
-  margin: 20px auto 0;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  border: 2px solid #fff;
-  color: #fff;
-  padding: 10px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* ===== 泡 ===== */
-.bubble {
-  position: absolute;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  animation: bubble-rise linear forwards;
-}
-@keyframes bubble-rise {
-  from { transform: translateY(0) scale(1); opacity: 0.6; }
-  to   { transform: translateY(-200px) scale(0.3); opacity: 0; }
-}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Permanent+Marker&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ocean-deep:#0a1628;--gold:#ffd700;--gold-dark:#b8960f;--danger:#ff4444;--success:#44ff88}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--ocean-deep);color:#fff;overflow:hidden;height:100vh;width:100vw;user-select:none}
+#game-container{position:relative;width:100%;height:100%;overflow:hidden}
+#sky{position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(180deg,#0b1a3a 0%,#1a3a6a 40%,#2a5a9a 70%,#ff8844 90%,#ffaa44 100%)}
+#sun{position:absolute;bottom:5%;left:20%;width:60px;height:60px;background:radial-gradient(circle,#ffee88,#ffaa22);border-radius:50%;box-shadow:0 0 40px #ffaa44,0 0 80px #ff884488;animation:sunPulse 4s ease-in-out infinite}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 40px #ffaa44,0 0 80px #ff884488}50%{box-shadow:0 0 60px #ffcc44,0 0 100px #ffaa4488}}
+#water{position:absolute;top:30%;left:0;right:0;bottom:0;background:linear-gradient(180deg,#1a4a7a 0%,#0d2847 30%,#0a1628 100%)}
+.wave{position:absolute;top:-8px;width:200%;height:20px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 20'%3E%3Cpath d='M0,10 Q150,0 300,10 Q450,20 600,10 Q750,0 900,10 Q1050,20 1200,10' fill='none' stroke='rgba(255,255,255,0.15)' stroke-width='2'/%3E%3C/svg%3E") repeat-x;animation:waveMove 4s linear infinite}
+.wave:nth-child(2){top:-4px;animation-duration:5s;opacity:.5}
+@keyframes waveMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.bubble{position:absolute;border-radius:50%;background:rgba(255,255,255,.1);animation:bubbleRise linear infinite}
+@keyframes bubbleRise{0%{transform:translateY(0) scale(1);opacity:.6}100%{transform:translateY(-200px) scale(.3);opacity:0}}
+#line-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:9;pointer-events:none}
+#hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;z-index:100;pointer-events:none}
+#hud>*{pointer-events:auto}
+.hud-panel{background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 16px}
+#money-display{font-family:'Permanent Marker',cursive;font-size:1.5rem;color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.5)}
+#rod-info{font-size:.85rem;opacity:.8;margin-top:4px}
+#collection-info{font-size:.8rem;opacity:.6;margin-top:4px}
+#cast-count{font-size:.75rem;opacity:.4;margin-top:2px}
+#shop-btn{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#1a1a1a;border:none;border-radius:12px;padding:10px 20px;font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 15px rgba(255,215,0,.3)}
+#shop-btn:hover{transform:scale(1.05)}
+.hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+/* 竿の先（固定位置） */
+#rod-tip{position:absolute;top:20%;left:52%;width:6px;height:6px;z-index:10;pointer-events:none}
+#fishing-line{position:absolute;top:28%;left:50%;width:2px;height:0;background:linear-gradient(180deg,#ccc,#888);transform-origin:top center;z-index:10;transition:height .5s ease;display:none}
+#hook{position:absolute;bottom:-10px;left:-5px;width:12px;height:12px;border:2px solid #aaa;border-top:none;border-left:none;border-radius:0 0 8px 0;transform:rotate(45deg)}
+#bait{position:absolute;bottom:-18px;left:-4px;font-size:10px}
+#cast-area{position:absolute;bottom:0;left:0;right:0;height:50%;display:flex;align-items:center;justify-content:center;z-index:50;cursor:pointer}
+#cast-btn{font-family:'Permanent Marker',cursive;font-size:2rem;color:#fff;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:50%;width:120px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;animation:castPulse 2s ease-in-out infinite}
+#cast-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.1)}
+@keyframes castPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.2)}50%{box-shadow:0 0 0 20px rgba(255,255,255,0)}}
+#approaching-fish{position:absolute;z-index:12;display:none;filter:drop-shadow(0 0 8px rgba(255,255,255,.3));pointer-events:none}
+#bite-scene{position:absolute;z-index:15;display:none;text-align:center;pointer-events:none}
+#bite-scene .bite-fish{animation:biteChomp .25s ease-in-out infinite alternate}
+#bite-scene .bite-label{background:rgba(0,0,0,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 14px;font-size:.9rem;font-weight:700;white-space:nowrap;margin-top:6px;display:inline-block}
+#bite-scene .bite-size{font-size:.75rem;opacity:.6;margin-top:2px}
+#bite-scene .bite-rarity{font-size:.7rem;margin-top:2px;padding:2px 8px;border-radius:10px;display:inline-block}
+@keyframes biteChomp{0%{transform:rotate(-10deg) scale(1)}100%{transform:rotate(10deg) scale(1.15)}}
+.splash{position:absolute;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:splashExpand .6s ease-out forwards;pointer-events:none;z-index:14}
+@keyframes splashExpand{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
+#hit-banner{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:20;font-family:'Permanent Marker',cursive;font-size:3rem;color:var(--danger);text-shadow:0 0 20px var(--danger),0 0 40px rgba(255,0,0,.3);pointer-events:none;transition:transform .2s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap}
+#hit-banner.show{transform:translate(-50%,-50%) scale(1)}
+#fighting-fish{position:absolute;z-index:11;display:none;pointer-events:none;filter:drop-shadow(0 0 12px rgba(255,255,255,.4))}
+/* 釣り上げ演出用 */
+#catch-anim-fish{position:absolute;z-index:200;pointer-events:none;display:none;transition:none}
+#fight-ui{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);text-align:center;z-index:60;display:none;width:340px}
+#fight-fish-display{font-size:1rem;margin-bottom:4px;font-weight:700}
+#distance-display{font-family:'Permanent Marker',cursive;font-size:1.5rem;margin-bottom:6px;text-shadow:0 0 10px rgba(255,255,255,.3)}
+#distance-display .dist-num{font-size:2rem;transition:color .2s}
+#fight-bar-container{width:100%;height:26px;background:rgba(0,0,0,.5);border-radius:13px;border:2px solid rgba(255,255,255,.2);overflow:hidden;position:relative;margin-bottom:8px}
+#fight-bar{height:100%;width:50%;border-radius:11px;transition:width .1s}
+#fight-bar-label{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
+#fight-instruction{font-size:1rem;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.8);animation:fightFlash .5s ease-in-out infinite alternate}
+@keyframes fightFlash{0%{opacity:.7}100%{opacity:1}}
+#space-hint{margin-top:6px;font-size:.78rem;opacity:.5}
+#space-hint kbd{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 8px;font-family:monospace}
+.ripple{position:absolute;width:20px;height:6px;border:1px solid rgba(255,255,255,.3);border-radius:50%;animation:rippleOut 1.5s ease-out infinite;pointer-events:none;z-index:11}
+@keyframes rippleOut{0%{transform:translate(-50%,-50%) scale(1);opacity:.6}100%{transform:translate(-50%,-50%) scale(4);opacity:0}}
+#waiting-text{position:absolute;top:38%;left:50%;transform:translateX(-50%);font-size:.95rem;opacity:.4;z-index:15;display:none}
+#catch-popup,#escaped-popup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(0,0,0,.88);backdrop-filter:blur(20px);border-radius:20px;padding:30px 40px;text-align:center;z-index:300;transition:transform .4s cubic-bezier(.175,.885,.32,1.275)}
+#catch-popup{border:2px solid var(--gold)}#escaped-popup{border:2px solid var(--danger)}
+#catch-popup.show,#escaped-popup.show{transform:translate(-50%,-50%) scale(1)}
+.fish-emoji{font-size:4rem;margin-bottom:10px}.fish-name{font-family:'Permanent Marker',cursive;font-size:1.8rem;color:var(--gold)}
+.fish-size{font-size:1.1rem;margin:6px 0;opacity:.8}.fish-reward{font-size:1.4rem;color:var(--gold);font-weight:900;margin:10px 0}
+.rarity-tag{display:inline-block;font-size:.7rem;font-weight:900;padding:2px 10px;border-radius:20px;margin-bottom:6px}
+.rarity-common{background:rgba(255,255,255,.15);color:#aaa}.rarity-uncommon{background:rgba(68,255,136,.15);color:var(--success)}.rarity-rare{background:rgba(68,136,255,.2);color:#66aaff}.rarity-epic{background:rgba(180,80,255,.2);color:#bb77ff}
+.rarity-legendary{background:rgba(255,215,0,.2);color:var(--gold);animation:legendGlow 1s ease-in-out infinite alternate}
+.rarity-mythic{background:rgba(255,50,50,.25);color:#ff4466;animation:mythicGlow .8s ease-in-out infinite alternate}
+@keyframes legendGlow{0%{box-shadow:0 0 5px rgba(255,215,0,.3)}100%{box-shadow:0 0 15px rgba(255,215,0,.6)}}
+@keyframes mythicGlow{0%{box-shadow:0 0 5px rgba(255,50,80,.3)}100%{box-shadow:0 0 20px rgba(255,50,80,.7)}}
+.new-badge{display:inline-block;background:var(--success);color:#1a1a1a;font-size:.75rem;font-weight:900;padding:2px 10px;border-radius:20px;margin-bottom:6px}
+.close-btn{background:var(--gold);color:#1a1a1a;border:none;border-radius:10px;padding:8px 30px;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:10px}
+#shop-modal{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:400;display:none;align-items:center;justify-content:center}
+#shop-modal.show{display:flex}
+#shop-content{background:linear-gradient(135deg,#1a2a4a,#0d1a30);border:2px solid var(--gold);border-radius:20px;padding:30px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
+#shop-content h2{font-family:'Permanent Marker',cursive;font-size:1.8rem;color:var(--gold);text-align:center;margin-bottom:6px}
+#shop-money{text-align:center;color:var(--gold);font-weight:700;margin-bottom:16px;font-size:1.1rem}
+.shop-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;transition:all .2s}.shop-item:hover{background:rgba(255,255,255,.1)}.shop-item.owned{border-color:var(--success);background:rgba(68,255,136,.05)}.shop-item.equipped{border-color:var(--gold);background:rgba(255,215,0,.1)}.shop-item-info h3{font-size:1rem;margin-bottom:4px}.shop-item-info p{font-size:.8rem;opacity:.6}.shop-item-info .stats{font-size:.8rem;color:var(--success);margin-top:2px}
+.buy-btn{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#1a1a1a;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;font-family:'Noto Sans JP',sans-serif}.buy-btn:disabled{opacity:.4;cursor:not-allowed}.buy-btn.equip-btn{background:linear-gradient(135deg,#44aaff,#2266aa);color:#fff}.buy-btn.equipped-btn{background:rgba(255,215,0,.3);color:var(--gold)}
+#shop-close{display:block;margin:16px auto 0;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 30px;font-size:1rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+.swimming-fish{position:absolute;font-size:1.5rem;z-index:5;opacity:.15;pointer-events:none}
+.sparkle{position:absolute;width:6px;height:6px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:350;animation:sparkleFade .8s ease-out forwards}
+@keyframes sparkleFade{0%{transform:scale(1);opacity:1}100%{transform:scale(0) translate(var(--dx),var(--dy));opacity:0}}
+@keyframes lineShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 </style>
 </head>
 <body>
-
 <div id="game-container">
-  <canvas id="game-canvas"></canvas>
-
-  <!-- ヘッダー -->
-  <div id="header">
-    <div>
-      <div id="money-display">💰 0G</div>
-      <div id="level-display">総キャッチ: 0匹</div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button id="collection-btn">📖 図鑑</button>
-      <button id="shop-btn">🛒 ショップ</button>
-    </div>
-  </div>
-
-  <!-- ステータス -->
-  <div id="status-text"></div>
-
-  <!-- キャストボタン -->
-  <button id="cast-btn">🎣 釣りを開始！</button>
-
-  <!-- バトルUI -->
-  <div id="battle-ui">
-    <div id="fish-name-battle"></div>
-    <div id="tension-bar-container">
-      <div id="tension-bar"></div>
-      <div id="tension-label">テンション</div>
-    </div>
-    <div id="progress-bar-container">
-      <div id="progress-bar"></div>
-    </div>
-    <button id="reel-btn">🔄 リール！</button>
-    <div id="battle-hint">連打してリールを巻こう！テンション上げすぎると糸が切れる！</div>
-  </div>
-
-  <!-- 結果 -->
-  <div id="result-popup">
-    <div id="result-fish-icon"></div>
-    <div id="result-fish-name"></div>
-    <div id="result-fish-size"></div>
-    <div id="result-money"></div>
-    <div id="result-fail"></div>
-    <button id="result-ok-btn">OK</button>
-  </div>
-
-  <!-- ショップ -->
-  <div id="shop-overlay">
-    <div id="shop-panel">
-      <h2>🛒 ショップ</h2>
-      <div id="shop-money"></div>
-      <div id="shop-items"></div>
-      <button id="shop-close-btn">閉じる</button>
-    </div>
-  </div>
-
-  <!-- 図鑑 -->
-  <div id="collection-overlay">
-    <div id="collection-panel">
-      <h2>📖 おさかな図鑑</h2>
-      <div id="collection-list"></div>
-      <button id="collection-close-btn">閉じる</button>
-    </div>
-  </div>
+  <div id="sky"><div id="sun"></div></div>
+  <div id="water"><div class="wave"></div><div class="wave"></div></div>
+  <canvas id="line-canvas"></canvas>
+  <div id="rod-tip"></div>
+  <div id="fishing-line"><div id="hook"></div><div id="bait">🪱</div></div>
+  <div id="approaching-fish"></div>
+  <div id="bite-scene"><div class="bite-fish"></div><div class="bite-label"></div><div class="bite-size"></div><div class="bite-rarity"></div></div>
+  <div id="hit-banner">‼️ HIT!</div>
+  <div id="fighting-fish"></div>
+  <div id="catch-anim-fish"></div>
+  <div id="waiting-text">魚を待っています...</div>
+  <div id="hud"><div class="hud-panel"><div id="money-display">💰 0G</div><div id="rod-info">🎋 竹の竿</div><div id="collection-info">📖 0 / 20種</div><div id="cast-count">🎣 0回目</div></div><div class="hud-right"><button id="shop-btn">🛒 ショップ</button><button id="reset-btn" style="background:rgba(255,50,50,.3);color:#ff8888;border:1px solid rgba(255,50,50,.3);border-radius:10px;padding:8px 14px;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer" onclick="resetSave()">🗑️ リセット</button></div></div>
+  <div id="cast-area"><div id="cast-btn">🎣<br><span style="font-size:.55rem;font-family:'Noto Sans JP'">タップ or SPACE</span></div></div>
+  <div id="fight-ui"><div id="fight-fish-display"></div><div id="distance-display">残り <span class="dist-num" id="dist-num">0</span> m</div><div id="fight-bar-container"><div id="fight-bar"></div><div id="fight-bar-label"></div></div><div id="fight-instruction">🔥 スペースを押して離せ！</div><div id="space-hint"><kbd>SPACE</kbd> 押して離す or タップ</div></div>
+  <div id="catch-popup"><div class="fish-emoji" id="catch-emoji"></div><div id="catch-rarity-tag" class="rarity-tag" style="display:none"></div><div id="catch-new-badge" class="new-badge" style="display:none">NEW!</div><div class="fish-name" id="catch-name"></div><div class="fish-size" id="catch-size"></div><div class="fish-reward" id="catch-reward"></div><button class="close-btn" onclick="closeCatchPopup()">OK!</button></div>
+  <div id="escaped-popup"><div style="font-size:3rem;margin-bottom:10px">💨</div><div style="font-size:1.3rem;font-weight:700;color:var(--danger)">逃げられた…！</div><div style="font-size:.9rem;opacity:.6;margin:8px 0" id="escaped-fish-name"></div><button class="close-btn" style="background:var(--danger);color:white" onclick="closeEscapedPopup()">OK</button></div>
+  <div id="shop-modal"><div id="shop-content"><h2>🛒 ショップ</h2><div id="shop-money"></div><div id="shop-items"></div><button id="shop-close" onclick="closeShop()">閉じる</button></div></div>
 </div>
-
 <script>
-// ========================================
-//  ゲームデータ
-// ========================================
+const canvas=document.getElementById('line-canvas'),ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
 
-const FISH_DATA = [
-  { id:'iwashi',    name:'イワシ',       icon:'🐟', minSize:10,  maxSize:25,  basePrice:20,   difficulty:1,  rarity:0.30, desc:'どこにでもいる小魚' },
-  { id:'aji',       name:'アジ',         icon:'🐟', minSize:15,  maxSize:35,  basePrice:40,   difficulty:1.5,rarity:0.25, desc:'美味しい大衆魚' },
-  { id:'tai',       name:'タイ',         icon:'🐡', minSize:25,  maxSize:60,  basePrice:100,  difficulty:2.5,rarity:0.15, desc:'めでたい高級魚' },
-  { id:'sake',      name:'サケ',         icon:'🐟', minSize:40,  maxSize:80,  basePrice:150,  difficulty:3,  rarity:0.10, desc:'力強く川を遡る魚' },
-  { id:'maguro',    name:'マグロ',       icon:'🐟', minSize:80,  maxSize:200, basePrice:400,  difficulty:4.5,rarity:0.07, desc:'海の王者、超パワフル' },
-  { id:'same',      name:'サメ',         icon:'🦈', minSize:100, maxSize:300, basePrice:600,  difficulty:6,  rarity:0.05, desc:'恐ろしい捕食者' },
-  { id:'kujira',    name:'クジラ',       icon:'🐋', minSize:500, maxSize:1500,basePrice:2000, difficulty:9,  rarity:0.02, desc:'伝説の巨大生物' },
-  { id:'ryugu',     name:'リュウグウノツカイ', icon:'🐉', minSize:200, maxSize:500, basePrice:3000, difficulty:8, rarity:0.01, desc:'幻の深海魚' },
+let money=0,equippedRod='bamboo',ownedRods=['bamboo'],caughtSpecies=new Set(),gameState='idle',totalCasts=0;
+const FISH=[
+{id:'sardine',name:'イワシ',emoji:'🐟',minSize:10,maxSize:25,basePrice:8,difficulty:0.22,rarity:0.32,depth:'shallow',color:'#88aacc',tier:'common'},
+{id:'horse_mackerel',name:'アジ',emoji:'🐟',minSize:15,maxSize:35,basePrice:15,difficulty:0.27,rarity:0.28,depth:'shallow',color:'#7799bb',tier:'common'},
+{id:'squid',name:'イカ',emoji:'🦑',minSize:20,maxSize:50,basePrice:20,difficulty:0.32,rarity:0.22,depth:'shallow',color:'#cc8899',tier:'common'},
+{id:'sea_bream',name:'タイ',emoji:'🐡',minSize:30,maxSize:70,basePrice:50,difficulty:0.48,rarity:0.10,depth:'mid',color:'#ee7788',tier:'uncommon'},
+{id:'flounder',name:'ヒラメ',emoji:'🐠',minSize:35,maxSize:80,basePrice:65,difficulty:0.52,rarity:0.08,depth:'mid',color:'#99bb77',tier:'uncommon'},
+{id:'octopus',name:'タコ',emoji:'🐙',minSize:30,maxSize:60,basePrice:55,difficulty:0.55,rarity:0.08,depth:'mid',color:'#cc6677',tier:'uncommon'},
+{id:'yellowtail',name:'ブリ',emoji:'🐟',minSize:50,maxSize:120,basePrice:120,difficulty:0.65,rarity:0.030,depth:'deep',color:'#aabb44',tier:'rare'},
+{id:'tuna',name:'マグロ',emoji:'🐟',minSize:80,maxSize:200,basePrice:200,difficulty:0.73,rarity:0.020,depth:'deep',color:'#4466aa',tier:'rare'},
+{id:'swordfish',name:'カジキ',emoji:'🗡️',minSize:100,maxSize:300,basePrice:350,difficulty:0.80,rarity:0.012,depth:'deep',color:'#5577cc',tier:'rare'},
+{id:'manta',name:'マンタ',emoji:'🦅',minSize:200,maxSize:500,basePrice:400,difficulty:0.78,rarity:0.010,depth:'deep',color:'#446688',tier:'rare'},
+{id:'shark',name:'サメ',emoji:'🦈',minSize:150,maxSize:400,basePrice:600,difficulty:0.88,rarity:0.005,depth:'deep',color:'#667788',tier:'epic'},
+{id:'whale_shark',name:'ジンベエザメ',emoji:'🐋',minSize:400,maxSize:800,basePrice:1500,difficulty:0.92,rarity:0.003,depth:'deep',color:'#5566aa',tier:'epic'},
+{id:'oarfish',name:'リュウグウノツカイ',emoji:'🐍',minSize:300,maxSize:600,basePrice:2000,difficulty:0.93,rarity:0.0025,depth:'deep',color:'#cc44aa',tier:'epic'},
+{id:'giant_squid',name:'ダイオウイカ',emoji:'🦑',minSize:500,maxSize:1200,basePrice:2500,difficulty:0.95,rarity:0.002,depth:'deep',color:'#883366',tier:'epic'},
+{id:'coelacanth',name:'シーラカンス',emoji:'🐠',minSize:150,maxSize:200,basePrice:5000,difficulty:0.96,rarity:0.0010,depth:'deep',color:'#3355aa',tier:'legendary'},
+{id:'golden_fish',name:'黄金の魚',emoji:'✨',minSize:30,maxSize:50,basePrice:8000,difficulty:0.88,rarity:0.0007,depth:'deep',color:'#ffcc00',tier:'legendary'},
+{id:'megalodon',name:'メガロドン',emoji:'🦈',minSize:1000,maxSize:2000,basePrice:12000,difficulty:0.98,rarity:0.0005,depth:'deep',color:'#554455',tier:'legendary'},
+{id:'dragon',name:'龍魚',emoji:'🐉',minSize:500,maxSize:1000,basePrice:20000,difficulty:0.99,rarity:0.00035,depth:'deep',color:'#ff6622',tier:'mythic'},
+{id:'leviathan',name:'リヴァイアサン',emoji:'🌊',minSize:2000,maxSize:5000,basePrice:50000,difficulty:1.0,rarity:0.00015,depth:'deep',color:'#2244aa',tier:'mythic'},
+{id:'void_fish',name:'虚無の魚',emoji:'🕳️',minSize:1,maxSize:1,basePrice:99999,difficulty:0.95,rarity:0.0001,depth:'deep',color:'#220033',tier:'mythic'},
+];
+const TIER_INFO={common:{label:'コモン',cls:'rarity-common'},uncommon:{label:'アンコモン',cls:'rarity-uncommon'},rare:{label:'★ レア',cls:'rarity-rare'},epic:{label:'★★ エピック',cls:'rarity-epic'},legendary:{label:'★★★ 伝説',cls:'rarity-legendary'},mythic:{label:'✦ 神話',cls:'rarity-mythic'}};
+const RODS=[
+{id:'bamboo',name:'竹の竿',emoji:'🎋',price:0,power:1.0,luck:1.0,desc:'初心者用の竿',stats:'パワー:★☆☆☆☆ 運:★☆☆☆☆'},
+{id:'fiber',name:'グラスファイバー竿',emoji:'🎣',price:200,power:1.4,luck:1.1,desc:'軽くて丈夫',stats:'パワー:★★☆☆☆ 運:★★☆☆☆'},
+{id:'carbon',name:'カーボン竿',emoji:'⚡',price:600,power:1.8,luck:1.3,desc:'プロ仕様',stats:'パワー:★★★☆☆ 運:★★☆☆☆'},
+{id:'titanium',name:'チタン合金竿',emoji:'🔩',price:1800,power:2.3,luck:1.5,desc:'大物も引ける',stats:'パワー:★★★★☆ 運:★★★☆☆'},
+{id:'golden_rod',name:'黄金の竿',emoji:'✨',price:5000,power:2.8,luck:2.0,desc:'レア魚が出やすい',stats:'パワー:★★★★☆ 運:★★★★★'},
+{id:'mithril',name:'ミスリルロッド',emoji:'💎',price:15000,power:3.5,luck:2.8,desc:'古代の金属',stats:'パワー:★★★★★ 運:★★★★☆'},
+{id:'abyssal',name:'深淵の竿',emoji:'🌀',price:40000,power:4.2,luck:3.5,desc:'深海の魔力',stats:'パワー:★★★★★+ 運:★★★★★'},
+{id:'divine',name:'神竿「海神」',emoji:'🔱',price:100000,power:5.5,luck:5.0,desc:'神話すら釣る',stats:'パワー:★★★★★++ 運:★★★★★++'},
 ];
 
-const SHOP_ITEMS = [
-  {
-    id: 'rod', name: '釣り竿', icon: '🎣',
-    desc: 'リール速度がアップ',
-    maxLevel: 10,
-    baseCost: 100,
-    costMult: 1.8,
-    effect: (lv) => 1 + lv * 0.3,
-    effectDesc: (lv) => `リール速度 x${(1 + lv * 0.3).toFixed(1)}`
-  },
-  {
-    id: 'line', name: '釣り糸', icon: '🧵',
-    desc: 'テンション耐久度がアップ',
-    maxLevel: 10,
-    baseCost: 120,
-    costMult: 1.8,
-    effect: (lv) => 1 + lv * 0.25,
-    effectDesc: (lv) => `耐久度 x${(1 + lv * 0.25).toFixed(2)}`
-  },
-  {
-    id: 'bait', name: 'エサ', icon: '🪱',
-    desc: 'レア魚が出やすくなる',
-    maxLevel: 10,
-    baseCost: 200,
-    costMult: 2.0,
-    effect: (lv) => 1 + lv * 0.15,
-    effectDesc: (lv) => `レア率 x${(1 + lv * 0.15).toFixed(2)}`
-  },
-  {
-    id: 'luck', name: 'お守り', icon: '🍀',
-    desc: '獲得金額がアップ',
-    maxLevel: 10,
-    baseCost: 150,
-    costMult: 2.0,
-    effect: (lv) => 1 + lv * 0.2,
-    effectDesc: (lv) => `金額 x${(1 + lv * 0.2).toFixed(1)}`
-  },
-  {
-    id: 'anchor', name: 'アンカー', icon: '⚓',
-    desc: '魚の抵抗力を軽減',
-    maxLevel: 10,
-    baseCost: 180,
-    costMult: 1.9,
-    effect: (lv) => 1 - lv * 0.06,
-    effectDesc: (lv) => `抵抗力 x${(1 - lv * 0.06).toFixed(2)}`
-  },
-];
+function getRod(){return RODS.find(r=>r.id===equippedRod)}
+function pickFish(){const rod=getRod();let pool=FISH.map(f=>{let w=f.rarity;if(f.tier==='rare')w*=rod.luck;if(f.tier==='epic')w*=Math.pow(rod.luck,1.5);if(f.tier==='legendary')w*=Math.pow(rod.luck,2);if(f.tier==='mythic')w*=Math.pow(rod.luck,2.5);if(f.depth==='deep'&&rod.power<1.5)w*=0.25;return{...f,weight:w}});const t=pool.reduce((s,f)=>s+f.weight,0);let r=Math.random()*t;for(const f of pool){r-=f.weight;if(r<=0)return f}return pool[0]}
+function randomSize(f){return Math.round(f.minSize+(f.maxSize-f.minSize)*Math.pow(Math.random(),1.5))}
+function calcReward(f,s){return Math.round(f.basePrice*(s/f.minSize)*(0.8+Math.random()*0.4))}
+function getFishScale(f,s){return 1.5+Math.min(((s-f.minSize)/Math.max(1,f.maxSize-f.minSize))*2.5,3)}
+function calcStartDistance(f,s){return Math.round((7+f.difficulty*35+(s/f.maxSize)*8)*10)/10}
+function updateHUD(){document.getElementById('money-display').textContent='💰 '+money.toLocaleString()+'G';const rod=getRod();document.getElementById('rod-info').textContent=rod.emoji+' '+rod.name;document.getElementById('collection-info').textContent='📖 '+caughtSpecies.size+' / '+FISH.length+'種';document.getElementById('cast-count').textContent='🎣 '+totalCasts+'回目'}
 
-// ========================================
-//  ゲーム状態
-// ========================================
-let gameState = {
-  money: 0,
-  totalCatch: 0,
-  upgrades: {},  // { rod: 0, line: 0, bait: 0, luck: 0, anchor: 0 }
-  collection: {},  // { fishId: { caught: true, maxSize: xx, count: 0 } }
-};
+// BG
+function spawnBgFish(){const w=document.getElementById('water'),f=FISH[Math.floor(Math.random()*6)];const el=document.createElement('div');el.className='swimming-fish';el.textContent=f.emoji;el.style.top=(20+Math.random()*60)+'%';el.style.fontSize=(1+Math.random())+'rem';el.style.opacity=.12+Math.random()*.12;const dur=(8+Math.random()*12)*1000;const goR=Math.random()>.5;if(goR){el.style.left='-40px';el.style.transform='scaleX(1)';el.animate([{left:'-40px'},{left:'calc(100% + 40px)'}],{duration:dur,fill:'forwards'}).onfinish=function(){el.remove()}}else{el.style.left='calc(100% + 40px)';el.style.transform='scaleX(-1)';el.animate([{left:'calc(100% + 40px)'},{left:'-40px'}],{duration:dur,fill:'forwards'}).onfinish=function(){el.remove()}}w.appendChild(el)}
+setInterval(spawnBgFish,3000);
+setInterval(function(){const w=document.getElementById('water'),b=document.createElement('div');b.className='bubble';const s=4+Math.random()*8;b.style.width=s+'px';b.style.height=s+'px';b.style.left=Math.random()*100+'%';b.style.top=(30+Math.random()*60)+'%';b.style.animationDuration=(2+Math.random()*4)+'s';w.appendChild(b);b.addEventListener('animationend',function(){b.remove()})},800);
 
-// ロード
-function loadGame() {
-  try {
-    const saved = localStorage.getItem('fishingMaster_save');
-    if (saved) {
-      const data = JSON.parse(saved);
-      gameState = { ...gameState, ...data };
-    }
-  } catch(e) {}
-  SHOP_ITEMS.forEach(item => {
-    if (!gameState.upgrades[item.id]) gameState.upgrades[item.id] = 0;
-  });
+// ===== GAME =====
+let currentFish=null,currentSize=0,fightInterval=null,approachAnim=null;
+let spaceDown=false,fishDistance=0,maxDistance=0,startDistance=0;
+let fishScreenX=0,fishScreenY=0,lineMode='none',lineShake=0; // lineMode: none, waiting, fighting, catching
+
+// 竿先の座標を取得
+function getRodTipPos(){
+  var rt=document.getElementById('rod-tip').getBoundingClientRect();
+  return{x:rt.left+rt.width/2, y:rt.top+rt.height/2};
 }
 
-function saveGame() {
-  try {
-    localStorage.setItem('fishingMaster_save', JSON.stringify(gameState));
-  } catch(e) {}
+document.addEventListener('keydown',function(e){if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(e.code==='Space')spaceDown=true}});
+document.addEventListener('keyup',function(e){if(e.code==='Space'){e.preventDefault();if(!spaceDown)return;spaceDown=false;if(document.getElementById('catch-popup').classList.contains('show')){closeCatchPopup();return}if(document.getElementById('escaped-popup').classList.contains('show')){closeEscapedPopup();return}handleAction()}if(e.code==='Enter'){if(document.getElementById('catch-popup').classList.contains('show')){closeCatchPopup();return}if(document.getElementById('escaped-popup').classList.contains('show')){closeEscapedPopup();return}handleAction()}});
+document.getElementById('cast-area').addEventListener('click',handleAction);
+
+function handleAction(){if(document.getElementById('shop-modal').classList.contains('show'))return;if(document.getElementById('catch-popup').classList.contains('show'))return;if(document.getElementById('escaped-popup').classList.contains('show'))return;if(gameState==='idle')startCasting();else if(gameState==='bite')startFight();else if(gameState==='fighting')reel()}
+function getHookPos(){var r=document.getElementById('fishing-line').getBoundingClientRect();return{x:r.left+r.width/2,y:r.bottom}}
+
+function startCasting(){
+  gameState='casting';totalCasts++;updateHUD();document.getElementById('cast-btn').style.display='none';
+  var fl=document.getElementById('fishing-line');fl.style.display='block';fl.style.height='0px';fl.style.animation='none';lineMode='none';
+  setTimeout(function(){fl.style.height='38%';gameState='waiting';document.getElementById('waiting-text').style.display='block';lineMode='waiting';
+    setTimeout(function(){var hp=getHookPos();fishScreenX=hp.x;fishScreenY=hp.y;var r=document.createElement('div');r.className='ripple';r.style.left=hp.x+'px';r.style.top=hp.y+'px';document.getElementById('game-container').appendChild(r);setTimeout(function(){r.remove()},3000)},600);
+    setTimeout(function(){if(gameState==='waiting'){currentFish=pickFish();currentSize=randomSize(currentFish);startApproach()}},1200+Math.random()*2500);
+  },100);
 }
 
-loadGame();
-
-// ========================================
-//  Canvas & 描画
-// ========================================
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// 水面の高さ
-const getWaterY = () => canvas.height * 0.45;
-
-// 背景の魚アニメーション
-let bgFishes = [];
-for (let i = 0; i < 12; i++) {
-  bgFishes.push({
-    x: Math.random() * canvas.width,
-    y: getWaterY() + 50 + Math.random() * (canvas.height * 0.45),
-    speed: 0.3 + Math.random() * 1.2,
-    size: 8 + Math.random() * 20,
-    dir: Math.random() > 0.5 ? 1 : -1,
-    color: `hsl(${180 + Math.random()*60}, 60%, ${40+Math.random()*20}%)`
-  });
+function startApproach(){
+  if(gameState!=='waiting')return;var hp=getHookPos(),scale=getFishScale(currentFish,currentSize),fromL=Math.random()>.5;
+  var af=document.getElementById('approaching-fish');af.textContent=currentFish.emoji;af.style.fontSize=scale+'rem';af.style.display='block';af.style.top=(hp.y-10)+'px';
+  var sx=fromL?-80:window.innerWidth+80,ex=hp.x-20;af.style.left=sx+'px';af.style.transform=fromL?'scaleX(1)':'scaleX(-1)';
+  var dur=1000+Math.random()*800;var st=null;
+  function anim(ts){if(!st)st=ts;var el=ts-st,p=Math.min(el/dur,1);var e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;af.style.left=(sx+(ex-sx)*e)+'px';af.style.top=(hp.y-10+Math.sin(el/120)*4)+'px';if(p<1&&gameState==='waiting')approachAnim=requestAnimationFrame(anim);else if(p>=1)triggerBite()}
+  approachAnim=requestAnimationFrame(anim);
 }
 
-// 波
-let waveOffset = 0;
-
-// 釣り糸の状態
-let lineState = {
-  casting: false,
-  waiting: false,
-  battling: false,
-  hookX: 0,
-  hookY: 0,
-  bobberY: 0,
-  bobberBob: 0,
-};
-
-// パーティクル
-let particles = [];
-
-function spawnParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: -Math.random() * 5 - 2,
-      life: 1,
-      decay: 0.015 + Math.random() * 0.02,
-      size: 2 + Math.random() * 4,
-      color
-    });
-  }
+function triggerBite(){
+  gameState='bite';document.getElementById('approaching-fish').style.display='none';document.getElementById('waiting-text').style.display='none';
+  var hp=getHookPos(),scale=getFishScale(currentFish,currentSize),bs=document.getElementById('bite-scene');
+  bs.querySelector('.bite-fish').textContent=currentFish.emoji;bs.querySelector('.bite-fish').style.fontSize=scale+'rem';
+  bs.querySelector('.bite-label').textContent=currentFish.name+'が食いついた！';bs.querySelector('.bite-size').textContent='推定 '+currentSize+'cm';
+  var ti=TIER_INFO[currentFish.tier],br=bs.querySelector('.bite-rarity');br.textContent=ti.label;br.className='bite-rarity '+ti.cls;
+  bs.style.left=hp.x+'px';bs.style.top=(hp.y-10)+'px';bs.style.display='block';document.getElementById('hit-banner').classList.add('show');
+  for(var i=0;i<3;i++){(function(i){setTimeout(function(){var s=document.createElement('div');s.className='splash';s.style.left=(hp.x+(Math.random()-.5)*40)+'px';s.style.top=(hp.y+(Math.random()-.5)*20)+'px';document.getElementById('game-container').appendChild(s);setTimeout(function(){s.remove()},600)},i*150)})(i)}
+  if(navigator.vibrate)navigator.vibrate([100,50,100,50,200]);
+  document.getElementById('fishing-line').style.animation='lineShake .1s ease-in-out 15';
+  setTimeout(function(){if(gameState==='bite')fishEscaped()},2500);
 }
 
-function drawScene() {
-  const w = canvas.width;
-  const h = canvas.height;
-  const waterY = getWaterY();
+function startFight(){
+  gameState='fighting';document.getElementById('bite-scene').style.display='none';document.getElementById('hit-banner').classList.remove('show');
+  // 静的な釣り糸を消してキャンバス描画に
+  document.getElementById('fishing-line').style.display='none';document.getElementById('fishing-line').style.animation='none';
+  lineMode='fighting';
+  document.getElementById('fight-ui').style.display='block';
+  var scale=getFishScale(currentFish,currentSize),ti=TIER_INFO[currentFish.tier];
+  document.getElementById('fight-fish-display').innerHTML='<span style="font-size:'+Math.min(scale*.6,2)+'rem">'+currentFish.emoji+'</span> '+currentFish.name+' '+currentSize+'cm <span class="rarity-tag '+ti.cls+'" style="font-size:.65rem">'+ti.label+'</span>';
+  var ff=document.getElementById('fighting-fish');ff.textContent=currentFish.emoji;ff.style.fontSize=scale+'rem';ff.style.display='block';
+  startDistance=calcStartDistance(currentFish,currentSize);fishDistance=startDistance;maxDistance=startDistance*1.7;
+  updateDistanceUI();
+  var rod=getRod();var eff=(currentFish.difficulty*(0.65+0.35*currentSize/currentFish.maxSize))/(rod.power*0.45);
+  var pullRate=0.025+eff*0.09;var jerkChance=eff*0.04;var jerkPower=0.6+eff*1.2;
+  var tick=0;
+  fightInterval=setInterval(function(){tick++;fishDistance+=pullRate;
+    if(Math.random()<jerkChance){fishDistance+=jerkPower*(0.5+Math.random());lineShake=10}
+    if(lineShake>0)lineShake-=0.5;
+    var dr=Math.min(fishDistance/maxDistance,1);
+    // 魚の画面座標（水面付近～画面右下方向へ）
+    var waterTop=window.innerHeight*0.30;
+    var fx=window.innerWidth*0.50+dr*window.innerWidth*0.35;
+    var fy=waterTop+20+dr*window.innerHeight*0.25+Math.sin(tick*.07)*10;
+    ff.style.left=fx+'px';ff.style.top=fy+'px';
+    ff.style.transform='scale('+Math.max(.4,1-dr*.5)+')';
+    fishScreenX=fx;fishScreenY=fy;
+    if(fishDistance>=maxDistance)fishEscaped();updateDistanceUI();
+  },50);
+}
 
-  // 空
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, waterY);
-  skyGrad.addColorStop(0, '#87CEEB');
-  skyGrad.addColorStop(1, '#5DADE2');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, w, waterY);
+// キャンバス描画ループ：竿先→魚をつなぐ糸
+function drawLineLoop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // 太陽
-  ctx.beginPath();
-  ctx.arc(w * 0.8, 60, 40, 0, Math.PI * 2);
-  ctx.fillStyle = '#FFF176';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(w * 0.8, 60, 55, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,241,118,0.2)';
-  ctx.fill();
+  if(lineMode==='fighting'||lineMode==='catching'){
+    var tip=getRodTipPos();
+    var fx=fishScreenX,fy=fishScreenY;
+    var dx=fx-tip.x,dy=fy-tip.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
 
-  // 雲
-  drawCloud(w * 0.15, 50, 0.8);
-  drawCloud(w * 0.5, 80, 0.6);
-  drawCloud(w * 0.75, 35, 0.5);
+    // たるみ（距離が遠いほどたるむ、近いとピン張り）
+    var tensionRatio=lineMode==='catching'?1:Math.max(0,1-fishDistance/maxDistance);
+    var sag=(1-tensionRatio)*Math.min(dist*0.2,80);
 
-  // 水中
-  const waterGrad = ctx.createLinearGradient(0, waterY, 0, h);
-  waterGrad.addColorStop(0, 'rgba(26, 82, 118, 0.85)');
-  waterGrad.addColorStop(0.5, 'rgba(13, 47, 79, 0.92)');
-  waterGrad.addColorStop(1, 'rgba(5, 20, 40, 0.98)');
-  ctx.fillStyle = waterGrad;
-  ctx.fillRect(0, waterY, w, h - waterY);
+    // ジャーク揺れ
+    var sx=lineShake>0?(Math.random()-.5)*lineShake*3:0;
 
-  // 波
-  waveOffset += 0.02;
-  ctx.beginPath();
-  ctx.moveTo(0, waterY);
-  for (let x = 0; x <= w; x += 5) {
-    const y = waterY + Math.sin(x * 0.015 + waveOffset) * 4 + Math.sin(x * 0.008 + waveOffset * 0.7) * 3;
-    ctx.lineTo(x, y);
-  }
-  ctx.lineTo(w, waterY + 15);
-  ctx.lineTo(0, waterY + 15);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(100, 180, 220, 0.4)';
-  ctx.fill();
+    // 色：近い=白っぽい、遠い=赤っぽい
+    var r,g,b,alpha=0.95;
+    if(lineMode==='catching'){r=200;g=255;b=200}
+    else if(tensionRatio>0.6){r=220;g=240;b=220}
+    else if(tensionRatio>0.3){r=240;g=200;b=100}
+    else{r=255;g=100;b=80}
 
-  // 背景の魚
-  bgFishes.forEach(f => {
-    f.x += f.speed * f.dir;
-    if (f.x > w + 30) f.x = -30;
-    if (f.x < -30) f.x = w + 30;
+    // 線の太さ：テンション高い=太い
+    ctx.lineWidth=lineMode==='catching'?3.5:2+tensionRatio*2;
+    ctx.strokeStyle='rgba('+r+','+g+','+b+','+alpha+')';
+    ctx.shadowColor='rgba('+r+','+g+','+b+',0.5)';
+    ctx.shadowBlur=lineMode==='catching'?12:4+tensionRatio*6;
+    ctx.lineCap='round';
 
-    ctx.save();
-    ctx.translate(f.x, f.y);
-    ctx.scale(f.dir, 1);
-    ctx.fillStyle = f.color;
+    // 2次ベジェ曲線（中間点をたるませる）
+    var mx=(tip.x+fx)/2+sx;
+    var my=(tip.y+fy)/2+sag;
+
     ctx.beginPath();
-    ctx.ellipse(0, 0, f.size, f.size * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // 尾
-    ctx.beginPath();
-    ctx.moveTo(-f.size, 0);
-    ctx.lineTo(-f.size - f.size * 0.5, -f.size * 0.3);
-    ctx.lineTo(-f.size - f.size * 0.5, f.size * 0.3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  });
+    ctx.moveTo(tip.x,tip.y);
+    ctx.quadraticCurveTo(mx,my,fx+sx*0.5,fy);
+    ctx.stroke();
+    ctx.shadowBlur=0;
 
-  // 釣り人（陸地/ボート）
-  drawFisher(w * 0.5, waterY);
-
-  // 釣り糸
-  if (lineState.casting || lineState.waiting || lineState.battling) {
-    drawFishingLine(w * 0.5, waterY - 30);
-  }
-
-  // パーティクル
-  particles.forEach((p, i) => {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.15;
-    p.life -= p.decay;
-    if (p.life > 0) {
-      ctx.globalAlpha = p.life;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  });
-  particles = particles.filter(p => p.life > 0);
-}
-
-function drawCloud(x, y, scale) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.beginPath();
-  ctx.arc(0, 0, 25, 0, Math.PI * 2);
-  ctx.arc(25, -5, 20, 0, Math.PI * 2);
-  ctx.arc(-22, 2, 18, 0, Math.PI * 2);
-  ctx.arc(10, 8, 18, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawFisher(x, y) {
-  ctx.save();
-  ctx.translate(x, y);
-
-  // ボート
-  ctx.fillStyle = '#8B4513';
-  ctx.beginPath();
-  ctx.moveTo(-40, 0);
-  ctx.quadraticCurveTo(-45, 15, -30, 18);
-  ctx.lineTo(30, 18);
-  ctx.quadraticCurveTo(45, 15, 40, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#5D3A1A';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // 体
-  ctx.fillStyle = '#2980b9';
-  ctx.fillRect(-8, -30, 16, 25);
-
-  // 頭
-  ctx.fillStyle = '#F5CBA7';
-  ctx.beginPath();
-  ctx.arc(0, -38, 10, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 帽子
-  ctx.fillStyle = '#E67E22';
-  ctx.fillRect(-12, -50, 24, 8);
-  ctx.fillRect(-8, -55, 16, 8);
-
-  // 竿
-  ctx.strokeStyle = '#5D4E37';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(5, -25);
-  ctx.lineTo(40, -65);
-  ctx.stroke();
-
-  ctx.strokeStyle = '#8B7355';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(40, -65);
-  ctx.lineTo(70, -50);
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function drawFishingLine(fisherX, fisherY) {
-  const tipX = fisherX + 70;
-  const tipY = fisherY - 50;
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.moveTo(tipX, tipY);
-  ctx.lineTo(lineState.hookX, lineState.hookY);
-  ctx.stroke();
-
-  // ウキ
-  if (lineState.waiting || lineState.battling) {
-    const bobY = lineState.bobberY + Math.sin(lineState.bobberBob) * 3;
-    lineState.bobberBob += 0.05;
-
-    if (lineState.battling) {
-      lineState.bobberBob += 0.15;
-      // 水しぶき
-      if (Math.random() < 0.3) {
-        spawnParticles(lineState.hookX, lineState.bobberY, '#87CEEB', 1);
-      }
-    }
-
-    // ウキ本体
-    ctx.fillStyle = '#e74c3c';
-    ctx.beginPath();
-    ctx.ellipse(lineState.hookX, bobY, 6, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.ellipse(lineState.hookX, bobY - 4, 4, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-// ========================================
-//  ゲームロジック
-// ========================================
-let currentFish = null;
-let battleProgress = 0;
-let battleTension = 0;
-let battleInterval = null;
-let waitTimer = null;
-let isReeling = false;
-
-const $ = id => document.getElementById(id);
-
-function updateUI() {
-  $('money-display').textContent = `💰 ${gameState.money.toLocaleString()}G`;
-  $('level-display').textContent = `総キャッチ: ${gameState.totalCatch}匹`;
-}
-
-function getUpgradeLevel(id) {
-  return gameState.upgrades[id] || 0;
-}
-
-function getUpgradeEffect(id) {
-  const item = SHOP_ITEMS.find(i => i.id === id);
-  return item ? item.effect(getUpgradeLevel(id)) : 1;
-}
-
-function selectFish() {
-  const baitMult = getUpgradeEffect('bait');
-
-  // レアリティを調整
-  let weights = FISH_DATA.map(f => {
-    let w = f.rarity;
-    // エサレベルが高いほどレア魚の確率が上がる
-    if (f.rarity < 0.1) {
-      w *= baitMult;
-    }
-    return w;
-  });
-
-  const total = weights.reduce((a, b) => a + b, 0);
-  let roll = Math.random() * total;
-
-  for (let i = 0; i < FISH_DATA.length; i++) {
-    roll -= weights[i];
-    if (roll <= 0) {
-      const fish = { ...FISH_DATA[i] };
-      fish.size = fish.minSize + Math.random() * (fish.maxSize - fish.minSize);
-      fish.size = Math.round(fish.size * 10) / 10;
-      // サイズ比率で価格調整
-      const sizeRatio = fish.size / fish.maxSize;
-      fish.reward = Math.round(fish.basePrice * (0.5 + sizeRatio * 1.5));
-      fish.reward = Math.round(fish.reward * getUpgradeEffect('luck'));
-      // 実際の難易度
-      fish.actualDifficulty = fish.difficulty * (0.7 + sizeRatio * 0.6) * getUpgradeEffect('anchor');
-      return fish;
+    // テンション高い時に糸に光る点
+    if(tensionRatio>0.5){
+      var t=Date.now()/400%1;
+      var px=tip.x*(1-t)*(1-t)+mx*2*(1-t)*t+fx*t*t;
+      var py=tip.y*(1-t)*(1-t)+my*2*(1-t)*t+fy*t*t;
+      ctx.fillStyle='rgba(255,255,255,'+(0.3+tensionRatio*0.4)+')';
+      ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fill();
     }
   }
-  return { ...FISH_DATA[0], size: 15, reward: 20, actualDifficulty: 1 };
+  requestAnimationFrame(drawLineLoop);
+}
+requestAnimationFrame(drawLineLoop);
+
+function reel(){
+  if(gameState!=='fighting')return;var rod=getRod();
+  var pp=0.4+rod.power*0.4;fishDistance-=pp;lineShake=3;
+  if(fishDistance<=0){fishDistance=0;updateDistanceUI();catchFish();return}
+  updateDistanceUI();
 }
 
-function castLine() {
-  $('cast-btn').classList.add('hidden');
-  $('status-text').textContent = '🎣 キャスト中...';
+function updateDistanceUI(){var dn=document.getElementById('dist-num'),dist=Math.max(0,fishDistance);dn.textContent=dist.toFixed(1);var pct=Math.max(0,Math.min(100,(1-dist/maxDistance)*100));var fb=document.getElementById('fight-bar');fb.style.width=pct+'%';if(pct>70)fb.style.background='linear-gradient(90deg,#44cc88,var(--success))';else if(pct>40)fb.style.background='linear-gradient(90deg,var(--gold),#aacc44)';else fb.style.background='linear-gradient(90deg,var(--danger),#cc8844)';document.getElementById('fight-bar-label').textContent='残り '+dist.toFixed(1)+'m';var inst=document.getElementById('fight-instruction');if(dist<2){inst.textContent='🔥 あと少し！';inst.style.color='var(--success)'}else if(dist>startDistance*1.3){inst.textContent='⚠️ 離されてる！';inst.style.color='var(--danger)'}else{inst.textContent='🔥 スペースを押して離せ！';inst.style.color='white'}dn.style.color=dist<2?'var(--success)':dist>startDistance*1.3?'var(--danger)':'var(--gold)'}
 
-  lineState.casting = true;
-  lineState.hookX = canvas.width * 0.5 + 70;
-  lineState.hookY = getWaterY() - 50;
+// 釣り上げ演出：魚が糸に引かれて水面から飛び出す
+function catchFish(){
+  clearInterval(fightInterval);gameState='idle';
+  document.getElementById('fight-ui').style.display='none';
+  var ff=document.getElementById('fighting-fish');ff.style.display='none';
 
-  // キャストアニメーション
-  const targetX = canvas.width * 0.5 + 100 + Math.random() * 80;
-  const targetY = getWaterY() + 20;
-  const duration = 600;
-  const start = Date.now();
+  // 釣り上げアニメーション
+  lineMode='catching';
+  var caf=document.getElementById('catch-anim-fish');
+  caf.textContent=currentFish.emoji;
+  var scale=getFishScale(currentFish,currentSize);
+  caf.style.fontSize=scale+'rem';caf.style.display='block';
+  var waterTop=window.innerHeight*0.30;
+  // 開始位置：水面付近の中央
+  var startX=window.innerWidth*0.5,startY=waterTop+20;
+  // 終了位置：竿先の少し下
+  var tip=getRodTipPos();
+  var endX=tip.x,endY=tip.y+30;
+  fishScreenX=startX;fishScreenY=startY;
 
-  function animateCast() {
-    const t = Math.min((Date.now() - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - t, 3);
-    lineState.hookX = (canvas.width * 0.5 + 70) + (targetX - (canvas.width * 0.5 + 70)) * ease;
-    lineState.hookY = (getWaterY() - 50) + (targetY - (getWaterY() - 50)) * ease - Math.sin(t * Math.PI) * 80;
+  var dur=600;var st=null;
+  function anim(ts){
+    if(!st)st=ts;var el=ts-st,p=Math.min(el/dur,1);
+    // イーズアウトで飛び上がる
+    var ep=1-Math.pow(1-p,3);
+    var cx=startX+(endX-startX)*ep;
+    // Y方向は弧を描いて上がる
+    var arcY=-80*Math.sin(p*Math.PI);
+    var cy=startY+(endY-startY)*ep+arcY;
+    caf.style.left=cx+'px';caf.style.top=cy+'px';
+    caf.style.transform='scale('+(1+0.3*Math.sin(p*Math.PI))+') rotate('+(-30*p)+'deg)';
+    fishScreenX=cx;fishScreenY=cy;
 
-    if (t < 1) {
-      requestAnimationFrame(animateCast);
-    } else {
-      lineState.hookX = targetX;
-      lineState.hookY = targetY;
-      lineState.bobberY = targetY;
-      lineState.casting = false;
-      lineState.waiting = true;
-      spawnParticles(targetX, targetY, '#87CEEB', 15);
-      waitForBite();
-    }
-  }
-  animateCast();
-}
-
-function waitForBite() {
-  $('status-text').textContent = '🔔 アタリを待っています...';
-
-  const waitTime = 2000 + Math.random() * 5000;
-  waitTimer = setTimeout(() => {
-    // ヒット！
-    currentFish = selectFish();
-    $('status-text').textContent = `❗ ${currentFish.icon} 何かがかかった！`;
-
-    // ウキを沈める
-    lineState.bobberBob = 0;
-    spawnParticles(lineState.hookX, lineState.bobberY, '#FFD700', 20);
-
-    setTimeout(() => {
-      startBattle();
-    }, 800);
-  }, waitTime);
-}
-
-function startBattle() {
-  lineState.battling = true;
-  lineState.waiting = false;
-  battleProgress = 0;
-  battleTension = 0;
-  isReeling = false;
-
-  $('battle-ui').style.display = 'block';
-  $('cast-btn').classList.add('hidden');
-  $('fish-name-battle').textContent = `${currentFish.icon} ${currentFish.name} (${currentFish.size}cm)`;
-  $('status-text').textContent = '⚔️ ファイト！リールを巻け！';
-
-  updateBattleBars();
-
-  // バトルループ
-  battleInterval = setInterval(() => {
-    // 魚の抵抗：大きい魚ほど強い
-    const resistance = currentFish.actualDifficulty * (0.3 + Math.random() * 0.7);
-    battleProgress -= resistance * 0.4;
-    if (battleProgress < 0) battleProgress = 0;
-
-    // テンション自然減少
-    battleTension -= 1.5;
-    if (battleTension < 0) battleTension = 0;
-
-    // テンションが100超えたら糸切れ
-    if (battleTension >= 100) {
-      endBattle(false, 'linesnap');
-      return;
+    // 水しぶき（開始時）
+    if(el<100&&el>0&&Math.random()<0.3){
+      var sp=document.createElement('div');sp.className='splash';
+      sp.style.left=(startX+(Math.random()-.5)*60)+'px';sp.style.top=waterTop+'px';
+      document.getElementById('game-container').appendChild(sp);setTimeout(function(){sp.remove()},600);
     }
 
-    // 進行が100%で釣り上げ成功
-    if (battleProgress >= 100) {
-      endBattle(true);
-      return;
+    if(p<1){requestAnimationFrame(anim)}
+    else{
+      caf.style.display='none';lineMode='none';
+      showCatchPopup();
     }
-
-    updateBattleBars();
-  }, 100);
-}
-
-function reelIn() {
-  if (!lineState.battling) return;
-
-  const rodMult = getUpgradeEffect('rod');
-  const reelPower = 2.5 * rodMult;
-  const tensionAdd = 3 + currentFish.actualDifficulty * 1.2;
-
-  battleProgress += reelPower;
-  battleTension += tensionAdd;
-
-  if (battleProgress > 100) battleProgress = 100;
-  if (battleTension > 100) battleTension = 100;
-
-  // 手応えのバイブレーション
-  if (navigator.vibrate && currentFish.actualDifficulty > 3) {
-    navigator.vibrate(30);
   }
-
-  spawnParticles(lineState.hookX, lineState.bobberY, '#fff', 2);
-  updateBattleBars();
+  requestAnimationFrame(anim);
 }
 
-function updateBattleBars() {
-  const lineStrength = getUpgradeEffect('line');
-  const effectiveTension = battleTension / lineStrength;
+function showCatchPopup(){
+  var isNew=!caughtSpecies.has(currentFish.id),reward=calcReward(currentFish,currentSize);money+=reward;caughtSpecies.add(currentFish.id);updateHUD();
+  document.getElementById('catch-emoji').textContent=currentFish.emoji;document.getElementById('catch-name').textContent=currentFish.name;
+  document.getElementById('catch-size').textContent=currentSize+'cm';document.getElementById('catch-reward').textContent='+'+reward.toLocaleString()+'G';
+  document.getElementById('catch-new-badge').style.display=isNew?'inline-block':'none';
+  var ti=TIER_INFO[currentFish.tier],rt=document.getElementById('catch-rarity-tag');rt.textContent=ti.label;rt.className='rarity-tag '+ti.cls;rt.style.display='inline-block';
+  document.getElementById('catch-popup').classList.add('show');
+  var sc=currentFish.tier==='mythic'?40:currentFish.tier==='legendary'?30:currentFish.tier==='epic'?20:12;
+  for(var i=0;i<sc;i++){var s=document.createElement('div');s.className='sparkle';var a=(i/sc)*Math.PI*2,d=60+Math.random()*50;s.style.left='calc(50% + '+Math.cos(a)*d+'px)';s.style.top='calc(50% + '+Math.sin(a)*d+'px)';s.style.setProperty('--dx',Math.cos(a)*40+'px');s.style.setProperty('--dy',Math.sin(a)*40+'px');s.style.background=currentFish.color||'var(--gold)';document.getElementById('game-container').appendChild(s);setTimeout(function(el){return function(){el.remove()}}(s),1000)}
+}
 
-  $('tension-bar').style.width = effectiveTension + '%';
-  $('progress-bar').style.width = battleProgress + '%';
+function fishEscaped(){
+  clearInterval(fightInterval);if(approachAnim)cancelAnimationFrame(approachAnim);gameState='idle';lineMode='none';
+  ['fight-ui','fishing-line','approaching-fish','bite-scene','waiting-text','fighting-fish','catch-anim-fish'].forEach(function(id){var e=document.getElementById(id);e.style.display='none';if(id==='fishing-line')e.style.animation='none'});
+  document.getElementById('hit-banner').classList.remove('show');
+  document.getElementById('escaped-fish-name').textContent=currentFish?currentFish.emoji+' '+currentFish.name+' ('+currentSize+'cm) が逃げた':'';
+  document.getElementById('escaped-popup').classList.add('show');resetCastBtn();
+}
 
-  // テンション色
-  if (effectiveTension < 50) {
-    $('tension-bar').style.background = '#2ecc71';
-  } else if (effectiveTension < 75) {
-    $('tension-bar').style.background = '#f39c12';
-  } else {
-    $('tension-bar').style.background = '#e74c3c';
+function closeCatchPopup(){document.getElementById('catch-popup').classList.remove('show');resetCastBtn()}
+function closeEscapedPopup(){document.getElementById('escaped-popup').classList.remove('show');resetCastBtn()}
+function resetCastBtn(){document.getElementById('cast-btn').style.display='flex'}
+
+document.getElementById('shop-btn').addEventListener('click',openShop);
+function openShop(){var si=document.getElementById('shop-items');si.innerHTML='';document.getElementById('shop-money').textContent='所持金: '+money.toLocaleString()+'G';RODS.forEach(function(rod){var owned=ownedRods.includes(rod.id),equipped=equippedRod===rod.id,canBuy=money>=rod.price&&!owned;var div=document.createElement('div');div.className='shop-item'+(equipped?' equipped':owned?' owned':'');var btn;if(equipped)btn='<button class="buy-btn equipped-btn" disabled>装備中</button>';else if(owned)btn='<button class="buy-btn equip-btn" onclick="equipRod(\''+rod.id+'\')">装備</button>';else if(rod.price===0)btn='';else btn='<button class="buy-btn" '+(canBuy?'':'disabled')+' onclick="buyRod(\''+rod.id+'\')">'+rod.price.toLocaleString()+'G</button>';div.innerHTML='<div class="shop-item-info"><h3>'+rod.emoji+' '+rod.name+'</h3><p>'+rod.desc+'</p><div class="stats">'+rod.stats+'</div></div>'+btn;si.appendChild(div)});document.getElementById('shop-modal').classList.add('show')}
+function buyRod(id){var rod=RODS.find(function(r){return r.id===id});if(money>=rod.price&&!ownedRods.includes(id)){money-=rod.price;ownedRods.push(id);equippedRod=id;updateHUD();openShop()}}
+function equipRod(id){if(ownedRods.includes(id)){equippedRod=id;updateHUD();openShop()}}
+function closeShop(){document.getElementById('shop-modal').classList.remove('show')}
+// ===== SAVE / LOAD =====
+function saveGame(){
+  var data={money:money,equippedRod:equippedRod,ownedRods:ownedRods,caughtSpecies:Array.from(caughtSpecies),totalCasts:totalCasts,ver:2};
+  try{localStorage.setItem('fishing_save',JSON.stringify(data))}catch(e){}
+}
+function loadGame(){
+  try{
+    var raw=localStorage.getItem('fishing_save');
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    if(d.money!=null)money=d.money;
+    if(d.equippedRod)equippedRod=d.equippedRod;
+    if(d.ownedRods)ownedRods=d.ownedRods;
+    if(d.caughtSpecies)caughtSpecies=new Set(d.caughtSpecies);
+    if(d.totalCasts!=null)totalCasts=d.totalCasts;
+  }catch(e){}
+}
+function resetSave(){
+  if(confirm('セーブデータを削除しますか？')){
+    localStorage.removeItem('fishing_save');
+    money=0;equippedRod='bamboo';ownedRods=['bamboo'];caughtSpecies=new Set();totalCasts=0;
+    updateHUD();
   }
-
-  // テンションが高い時に画面を揺らす
-  if (effectiveTension > 80) {
-    const shake = (effectiveTension - 80) * 0.15;
-    canvas.style.transform = `translate(${(Math.random()-0.5)*shake}px, ${(Math.random()-0.5)*shake}px)`;
-  } else {
-    canvas.style.transform = '';
-  }
-
-  // 糸切れ判定（補正後）
-  if (effectiveTension >= 100) {
-    endBattle(false, 'linesnap');
-  }
 }
 
-function endBattle(success, reason) {
-  clearInterval(battleInterval);
-  battleInterval = null;
-  lineState.battling = false;
-  lineState.waiting = false;
-  lineState.casting = false;
-  canvas.style.transform = '';
+// 釣り上げ・購入時にオートセーブ
+var _origShowCatch=showCatchPopup;
+showCatchPopup=function(){_origShowCatch();saveGame()};
+var _origBuyRod=buyRod;
+buyRod=function(id){_origBuyRod(id);saveGame()};
+var _origEquipRod=equipRod;
+equipRod=function(id){_origEquipRod(id);saveGame()};
 
-  $('battle-ui').style.display = 'none';
-
-  if (success) {
-    // 成功！
-    gameState.money += currentFish.reward;
-    gameState.totalCatch++;
-
-    // 図鑑更新
-    if (!gameState.collection[currentFish.id]) {
-      gameState.collection[currentFish.id] = { caught: true, maxSize: 0, count: 0 };
-    }
-    const entry = gameState.collection[currentFish.id];
-    entry.count++;
-    if (currentFish.size > entry.maxSize) entry.maxSize = currentFish.size;
-
-    saveGame();
-
-    $('result-fish-icon').textContent = currentFish.icon;
-    $('result-fish-name').textContent = currentFish.name;
-    $('result-fish-size').textContent = `${currentFish.size}cm`;
-    $('result-money').textContent = `+${currentFish.reward.toLocaleString()}G 獲得！`;
-    $('result-money').style.display = 'block';
-    $('result-fail').style.display = 'none';
-
-    spawnParticles(canvas.width / 2, canvas.height / 2, '#FFD700', 40);
-    spawnParticles(canvas.width / 2, canvas.height / 2, '#2ecc71', 20);
-  } else {
-    $('result-fish-icon').textContent = '💨';
-    $('result-fish-name').textContent = `${currentFish.name}に逃げられた...`;
-    $('result-fish-size').textContent = reason === 'linesnap' ? '糸が切れた！' : '逃げられた！';
-    $('result-money').style.display = 'none';
-    $('result-fail').textContent = 'もっと強い装備が必要かも...';
-    $('result-fail').style.display = 'block';
-  }
-
-  $('result-popup').classList.add('active');
-  updateUI();
-}
-
-function closeResult() {
-  $('result-popup').classList.remove('active');
-  $('cast-btn').classList.remove('hidden');
-  $('status-text').textContent = '';
-  currentFish = null;
-}
-
-// ========================================
-//  ショップ
-// ========================================
-function openShop() {
-  $('shop-overlay').classList.add('active');
-  renderShop();
-}
-
-function closeShop() {
-  $('shop-overlay').classList.remove('active');
-}
-
-function renderShop() {
-  $('shop-money').textContent = `所持金: ${gameState.money.toLocaleString()}G`;
-
-  const container = $('shop-items');
-  container.innerHTML = '';
-
-  SHOP_ITEMS.forEach(item => {
-    const lv = getUpgradeLevel(item.id);
-    const maxed = lv >= item.maxLevel;
-    const cost = maxed ? 0 : Math.round(item.baseCost * Math.pow(item.costMult, lv));
-    const canAfford = gameState.money >= cost;
-
-    const div = document.createElement('div');
-    div.className = 'shop-item';
-    div.innerHTML = `
-      <div class="shop-item-info">
-        <div class="shop-item-name">${item.icon} ${item.name}</div>
-        <div class="shop-item-desc">${item.desc}</div>
-        <div class="shop-item-level">Lv.${lv}/${item.maxLevel} → ${item.effectDesc(lv)}</div>
-      </div>
-      <button class="shop-buy-btn ${maxed ? 'maxed' : (!canAfford ? 'cant-afford' : '')}"
-              ${maxed || !canAfford ? '' : `onclick="buyItem('${item.id}')"` }>
-        ${maxed ? 'MAX' : `${cost.toLocaleString()}G`}
-      </button>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function buyItem(itemId) {
-  const item = SHOP_ITEMS.find(i => i.id === itemId);
-  const lv = getUpgradeLevel(itemId);
-  if (lv >= item.maxLevel) return;
-
-  const cost = Math.round(item.baseCost * Math.pow(item.costMult, lv));
-  if (gameState.money < cost) return;
-
-  gameState.money -= cost;
-  gameState.upgrades[itemId] = lv + 1;
-  saveGame();
-  updateUI();
-  renderShop();
-}
-
-// ========================================
-//  図鑑
-// ========================================
-function openCollection() {
-  $('collection-overlay').classList.add('active');
-  renderCollection();
-}
-
-function closeCollection() {
-  $('collection-overlay').classList.remove('active');
-}
-
-function renderCollection() {
-  const container = $('collection-list');
-  container.innerHTML = '';
-
-  FISH_DATA.forEach(fish => {
-    const entry = gameState.collection[fish.id];
-    const discovered = entry && entry.caught;
-    const div = document.createElement('div');
-    div.className = `collection-entry ${discovered ? '' : 'undiscovered'}`;
-    div.innerHTML = `
-      <div class="collection-icon">${discovered ? fish.icon : '❓'}</div>
-      <div>
-        <div class="collection-info-name">${discovered ? fish.name : '？？？'}</div>
-        <div class="collection-info-detail">
-          ${discovered
-            ? `${fish.desc}<br>最大: ${entry.maxSize}cm / 釣った数: ${entry.count}匹`
-            : 'まだ釣ったことがない'
-          }
-        </div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-// ========================================
-//  イベント
-// ========================================
-$('cast-btn').addEventListener('click', castLine);
-$('reel-btn').addEventListener('mousedown', () => { isReeling = true; });
-$('reel-btn').addEventListener('mouseup', () => { isReeling = false; });
-$('reel-btn').addEventListener('mouseleave', () => { isReeling = false; });
-$('reel-btn').addEventListener('touchstart', (e) => { e.preventDefault(); isReeling = true; });
-$('reel-btn').addEventListener('touchend', () => { isReeling = false; });
-
-// 連打でもOK
-$('reel-btn').addEventListener('click', reelIn);
-
-// キーボード対応
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && lineState.battling) {
-    e.preventDefault();
-    reelIn();
-  }
-  if (e.code === 'Space' && !lineState.battling && !lineState.waiting && !lineState.casting
-      && !$('result-popup').classList.contains('active')
-      && !$('shop-overlay').classList.contains('active')) {
-    castLine();
-  }
-  if (e.code === 'Enter' && $('result-popup').classList.contains('active')) {
-    closeResult();
-  }
-});
-
-// 長押しリール
-setInterval(() => {
-  if (isReeling && lineState.battling) {
-    reelIn();
-  }
-}, 120);
-
-$('result-ok-btn').addEventListener('click', closeResult);
-$('shop-btn').addEventListener('click', openShop);
-$('shop-close-btn').addEventListener('click', closeShop);
-$('collection-btn').addEventListener('click', openCollection);
-$('collection-close-btn').addEventListener('click', closeCollection);
-
-// ========================================
-//  メインループ
-// ========================================
-function gameLoop() {
-  drawScene();
-  requestAnimationFrame(gameLoop);
-}
-
-updateUI();
-gameLoop();
+loadGame();updateHUD();for(var i=0;i<3;i++)spawnBgFish();
 </script>
 </body>
 </html>
